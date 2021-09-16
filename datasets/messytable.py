@@ -156,6 +156,7 @@ class MessytableDataset(Dataset):
         img_disp_r = img_disp_r[x:(x+th), y:(y+tw)]
         img_depth_r = img_depth_r[x:(x+th), y:(y+tw)]
         img_sim_rgb = img_sim_rgb[x:(x+th), y:(y+tw)]  # real original res in 1080*1920
+        print(img_sim_rgb.shape)
 
         
 
