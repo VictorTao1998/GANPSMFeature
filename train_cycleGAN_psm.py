@@ -36,6 +36,7 @@ parser.add_argument("--local_rank", type=int, default=0, help='Rank of device in
 parser.add_argument('--debug', action='store_true', help='Whether run in debug mode (will load less data)')
 parser.add_argument('--warp-op', action='store_true',default=True, help='whether use warp_op function to get disparity')
 parser.add_argument('--loss-ratio', type=float, default=0.05, help='Ratio between loss_G and loss_cascade')
+parser.add_argument('--loadmodel', default= None, help='load model')
 
 args = parser.parse_args()
 cfg.merge_from_file(args.config_file)
@@ -47,6 +48,7 @@ set_random_seed(args.seed)
 num_gpus = int(os.environ["WORLD_SIZE"]) if "WORLD_SIZE" in os.environ else 1
 is_distributed = num_gpus > 1
 args.is_distributed = is_distributed
+print(is_distributed)
 if is_distributed:
     torch.cuda.set_device(args.local_rank)
     torch.distributed.init_process_group( backend="nccl", init_method="env://")
