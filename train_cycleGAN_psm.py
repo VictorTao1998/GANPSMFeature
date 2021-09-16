@@ -204,6 +204,10 @@ def train_sample(sample, gan_model, psmnet_model, feaex, isTrain=True):
                              recompute_scale_factor=False, align_corners=False)
 
     fea_L, fea_R, fea_sim = feaex(img_L), feaex(img_R), feaex(img_sim)
+    fea_L = fea_L[:,1,:,:].reshape((fea_L.shape[0], 1, fea_L.shape[2], fea_L.shape[3]))
+    fea_R = fea_R[:,1,:,:].reshape((fea_R.shape[0], 1, fea_R.shape[2], fea_R.shape[3]))
+    fea_sim = fea_sim[:,1,:,:].reshape((fea_sim.shape[0], 1, fea_sim.shape[2], fea_sim.shape[3]))
+
     input_sample = {'img_L': fea_L, 'img_R': fea_R, 'img_sim': fea_sim}
     gan_model.set_input(input_sample)
     if isTrain:
@@ -345,7 +349,7 @@ if __name__ == '__main__':
     pretrain_dict = torch.load(args.loadmodel)
     psmnet_model.load_state_dict(pretrain_dict['state_dict'])
 
-    feaex = psmnet_model.module.feature_extraction
+    feaex = psmnet_model.module.feature_extraction.ganfeature
     psmnet_model.module.feature_extraction.gan_train = False
 
     # Start training
