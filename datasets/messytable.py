@@ -124,6 +124,7 @@ class MessytableDataset(Dataset):
         img_depth_l = np.array(Image.open(self.img_depth_l[idx]).resize((540,960))) / 1000    # convert from mm to m
         img_depth_r = np.array(Image.open(self.img_depth_r[idx]).resize((540,960))) / 1000    # convert from mm to m
         img_meta = load_pickle(self.img_meta[idx])
+        print('other ', img_depth_l.shape)
 
         # For unpaired pix2pix, load a random real image from real dataset [H, W, 1], in value range (-1, 1)
         
