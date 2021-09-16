@@ -117,15 +117,16 @@ class MessytableDataset(Dataset):
         return len(self.img_L)
 
     def __getitem__(self, idx):
-        print(self.img_L, np.array(Image.open(self.img_L[idx]).convert('RGB')).shape)
-        img_L_rgb = (np.array(Image.open(self.img_L[idx]))[:, :, :3] - 127.5) / 127.5   # [H, W, 1], in (0, 1)
-        img_R_rgb = (np.array(Image.open(self.img_R[idx]))[:, :, :3] - 127.5) / 127.5   # [H, W, 1], in (0, 1)
+        #print(self.img_L, np.array(Image.open(self.img_L[idx]).convert('RGB')).shape)
+        img_L_rgb = (np.array(Image.open(self.img_L[idx]).convert('RGB')) - 127.5) / 127.5   # [H, W, 1], in (0, 1)
+        img_R_rgb = (np.array(Image.open(self.img_R[idx]).convert('RGB')) - 127.5) / 127.5   # [H, W, 1], in (0, 1)
+        print(img_L_rgb.shape)
         img_depth_l = np.array(Image.open(self.img_depth_l[idx])) / 1000    # convert from mm to m
         img_depth_r = np.array(Image.open(self.img_depth_r[idx])) / 1000    # convert from mm to m
         img_meta = load_pickle(self.img_meta[idx])
 
         # For unpaired pix2pix, load a random real image from real dataset [H, W, 1], in value range (-1, 1)
-        img_sim_rgb = (np.array(Image.open(random.choice(self.img_sim)))[:, :, 3] - 127.5) / 127.5
+        img_sim_rgb = (np.array(Image.open(random.choice(self.img_sim)).convert('RGB')) - 127.5) / 127.5
 
         # Convert depth map to disparity map
         extrinsic_l = img_meta['extrinsic_l']
