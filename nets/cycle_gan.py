@@ -84,7 +84,7 @@ class CycleGANModel:
     def set_input(self, input):
         self.real_A_L = input['img_L']
         self.real_A_R = input['img_R']
-        self.real_B = input['img_real']
+        self.real_B = input['img_sim']
 
     def forward(self):
         # fake_B = G_A(A)
@@ -212,7 +212,7 @@ if __name__ == '__main__':
     img_L = torch.rand(1, 1, h, w).cuda()
     img_R = torch.rand(1, 1, h, w).cuda()
     img_real = torch.rand(1, 1, h, w).cuda()
-    input = {'img_L': img_L, 'img_R': img_R, 'img_real': img_real}
+    input = {'img_L': img_L, 'img_R': img_R, 'img_sim': img_real}
 
     cuda_device = torch.device("cuda:{}".format(0))
     cycleGAN = CycleGANModel()
