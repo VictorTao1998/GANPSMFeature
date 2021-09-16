@@ -156,7 +156,7 @@ class FeatureExtraction(nn.Module):
         :return:    [bs, 32, H/4, W/4]
         """
         if self.gan_train:
-            print('success')
+            #print('success')
             gan_fea = x
         else:
             gan_fea = self.ganfeature(x)
