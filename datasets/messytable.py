@@ -118,14 +118,14 @@ class MessytableDataset(Dataset):
 
     def __getitem__(self, idx):
         #print(self.img_L, np.array(Image.open(self.img_L[idx]).convert('RGB')).shape)
-        print(np.array(Image.open(self.img_L[idx])).shape, np.array(Image.open(self.img_L[idx]).convert('RGB')).shape, np.array(Image.open(self.img_L[idx]).convert('RGB').resize((540,960))).shape)
-        img_L_rgb = (np.array(Image.open(self.img_L[idx]).convert('RGB').resize((540,960))) - 127.5) / 127.5   # [H, W, 1], in (0, 1)
-        img_R_rgb = (np.array(Image.open(self.img_R[idx]).convert('RGB').resize((540,960))) - 127.5) / 127.5   # [H, W, 1], in (0, 1)
+        #print(np.array(Image.open(self.img_L[idx])).shape, np.array(Image.open(self.img_L[idx]).convert('RGB')).shape, np.array(Image.open(self.img_L[idx]).convert('RGB').resize((540,960))).shape)
+        img_L_rgb = (np.array(Image.open(self.img_L[idx]).convert('RGB').resize((960,540))) - 127.5) / 127.5   # [H, W, 1], in (0, 1)
+        img_R_rgb = (np.array(Image.open(self.img_R[idx]).convert('RGB').resize((960,540))) - 127.5) / 127.5   # [H, W, 1], in (0, 1)
         #print(img_L_rgb.shape)
-        img_depth_l = np.array(Image.open(self.img_depth_l[idx]).resize((540,960))) / 1000    # convert from mm to m
-        img_depth_r = np.array(Image.open(self.img_depth_r[idx]).resize((540,960))) / 1000    # convert from mm to m
+        img_depth_l = np.array(Image.open(self.img_depth_l[idx]).resize((960,540))) / 1000    # convert from mm to m
+        img_depth_r = np.array(Image.open(self.img_depth_r[idx]).resize((960,540))) / 1000    # convert from mm to m
         img_meta = load_pickle(self.img_meta[idx])
-        print('other ', img_depth_l.shape)
+        #print('other ', img_depth_l.shape)
 
         # For unpaired pix2pix, load a random real image from real dataset [H, W, 1], in value range (-1, 1)
         
@@ -157,9 +157,9 @@ class MessytableDataset(Dataset):
         img_depth_l = img_depth_l[x:(x+th), y:(y+tw)]
         img_disp_r = img_disp_r[x:(x+th), y:(y+tw)]
         img_depth_r = img_depth_r[x:(x+th), y:(y+tw)]
-        print('before ', img_sim_rgb.shape, x, y, th, tw)
+        #print('before ', img_sim_rgb.shape, x, y, th, tw)
         img_sim_rgb = img_sim_rgb[x:(x+th), y:(y+tw)]  # real original res in 1080*1920
-        print('after ', img_sim_rgb.shape)
+        #print('after ', img_sim_rgb.shape)
 
         
 
