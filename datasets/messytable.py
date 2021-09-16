@@ -151,22 +151,22 @@ class MessytableDataset(Dataset):
         img_disp_r[mask] = focal_length * baseline / img_depth_r[mask]
 
         # random crop the image to 256 * 512
-        h, w = img_L_rgb.shape[1:]
+        w, h = img_L_rgb.size
         th, tw = cfg.ARGS.CROP_HEIGHT, cfg.ARGS.CROP_WIDTH
-        x = random.randint(0, h - th)
-        y = random.randint(0, w - tw)
+        y = random.randint(0, h - th)
+        x = random.randint(0, w - tw)
 
-        img_L_rgb = img_L_rgb.crop((x, y, x + th, y + tw))
-        img_R_rgb = img_R_rgb.crop((x, y, x + th, y + tw))
-        img_sim_rgb = img_sim_rgb.crop((x, y, x + th, y + tw))
+        img_L_rgb = img_L_rgb.crop((x, y, x + tw, y + th))
+        img_R_rgb = img_R_rgb.crop((x, y, x + tw, y + th))
+        img_sim_rgb = img_sim_rgb.crop((x, y, x + tw, y + th))
 
         #disparity_R = disparity_R[y1:y1 + crop_h, x1:x1 + crop_w]
         #img_L_rgb = img_L_rgb[x:(x+th), y:(y+tw)]
         #img_R_rgb = img_R_rgb[x:(x+th), y:(y+tw)]
-        img_disp_l = img_disp_l[x:(x+th), y:(y+tw)]  # depth original res in 1080*1920
-        img_depth_l = img_depth_l[x:(x+th), y:(y+tw)]
-        img_disp_r = img_disp_r[x:(x+th), y:(y+tw)]
-        img_depth_r = img_depth_r[x:(x+th), y:(y+tw)]
+        img_disp_l = img_disp_l[y:(y+th), x:(x+tw)]  # depth original res in 1080*1920
+        img_depth_l = img_depth_l[y:(y+th), x:(x+tw)]
+        img_disp_r = img_disp_r[y:(y+th), x:(x+tw)]
+        img_depth_r = img_depth_r[y:(y+th), x:(x+tw)]
         #print('before ', img_sim_rgb.shape, x, y, th, tw)
         #img_sim_rgb = img_sim_rgb[x:(x+th), y:(y+tw)]  # real original res in 1080*1920
         #print('after ', img_sim_rgb.shape)
