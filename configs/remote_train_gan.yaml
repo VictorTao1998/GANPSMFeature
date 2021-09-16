@@ -18,6 +18,8 @@ SPLIT:
 # Configuration for testing on real dataset
 REAL:
   DATASET: '/cephfs/datasets/iccv_pnp/real_data_v9/'  # path to your real testing dataset
+  DEPTHPATH: '/cephfs/datasets/iccv_pnp/messy-table-dataset/real_v9/training'
+  TRAIN: '/cephfs/jianyu/newTrain.txt'
   LEFT: '1024_irL_real_1080.png'
   RIGHT: '1024_irR_real_1080.png'
 
@@ -45,6 +47,8 @@ ARGS:
   NS_SIZE: 3                # nb_size
   CROP_HEIGHT: 256          # crop height
   CROP_WIDTH: 512           # crop width
+  TEST_CROP_HEIGHT: 540          # crop height
+  TEST_CROP_WIDTH: 960           # crop width
 
 # Data augmentation
 DATA_AUG:

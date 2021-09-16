@@ -74,11 +74,13 @@ class DisparityRegression(nn.Module):
 
 
 class FeatureExtraction(nn.Module):
-    def __init__(self):
+    def __init__(self, gan_train):
         super(FeatureExtraction, self).__init__()
         # CNN module
         self.inplanes = 32
         # conv0_1, conv0_2, conv0_3
+        self.ganfeature = nn.Sequential(convbn(3, 3, 3, 1, 1, 1),
+                                        nn.ReLU(inplace=True))
         self.firstconv = nn.Sequential(
             convbn(3, 32, 3, 2, 1, 1),
             nn.ReLU(inplace=True),
@@ -152,9 +154,12 @@ class FeatureExtraction(nn.Module):
         :param x:   [bs, 3, H, W]
         :return:    [bs, 32, H/4, W/4]
         """
-
+        if self.gan_train:
+            gan_fea = x
+        else:
+            gan_fea = self.ganfeature(x)
         # CNN module
-        output = self.firstconv(x)
+        output = self.firstconv(gan_fea)
         output = self.layer1(output)
         output_raw = self.layer2(output)    # conv2_16 [bs, 64, H/2, W/2]
         output = self.layer3(output_raw)

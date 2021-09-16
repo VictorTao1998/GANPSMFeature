@@ -16,7 +16,7 @@ from utils.util import load_pickle
 
 
 class MessytableDataset(Dataset):
-    def __init__(self, split_file, gaussian_blur=False, color_jitter=False, debug=False, sub=100):
+    def __init__(self, split_file, gaussian_blur=False, color_jitter=False, debug=False, sub=100, isReal=False):
         """
         :param split_file: Path to the split .txt file, e.g. train.txt
         :param gaussian_blur: Whether apply gaussian blur in data augmentation
@@ -25,7 +25,7 @@ class MessytableDataset(Dataset):
         :param sub: If debug mode is enabled, sub will be the number of data loaded
         """
         self.img_L, self.img_R, self.img_depth_l, self.img_depth_r, self.img_meta, self.img_label, self.img_real = \
-            self.__get_split_files__(split_file, debug, sub, isTest=False)
+            self.__get_split_files__(split_file, debug, sub, isTest=False, onReal=isReal)
         self.gaussian_blur = gaussian_blur
         self.color_jitter = color_jitter
 
@@ -50,10 +50,13 @@ class MessytableDataset(Dataset):
 
             img_L = [os.path.join(dataset, p, img_left_name) for p in prefix]
             img_R = [os.path.join(dataset, p, img_right_name) for p in prefix]
-            img_depth_l = [os.path.join(cfg.DIR.DATASET, p, cfg.SPLIT.DEPTHL) for p in prefix]
-            img_depth_r = [os.path.join(cfg.DIR.DATASET, p, cfg.SPLIT.DEPTHR) for p in prefix]
-            img_meta = [os.path.join(cfg.DIR.DATASET, p, cfg.SPLIT.META) for p in prefix]
-            img_label = [os.path.join(cfg.REAL.DATASET, p, cfg.SPLIT.LABEL) for p in prefix]
+
+            depth_dir = cfg.REAL.DEPTHPATH if onReal else cfg.DIR.DATASET
+            
+            img_depth_l = [os.path.join(depth_dir, p, cfg.SPLIT.DEPTHL) for p in prefix]
+            img_depth_r = [os.path.join(depth_dir, p, cfg.SPLIT.DEPTHR) for p in prefix]
+            img_meta = [os.path.join(depth_dir, p, cfg.SPLIT.META) for p in prefix]
+            #img_label = [os.path.join(depth_dir, p, cfg.SPLIT.LABEL) for p in prefix]
 
             if debug is True:
                 img_L = img_L[:sub]
@@ -61,19 +64,20 @@ class MessytableDataset(Dataset):
                 img_depth_l = img_depth_l[:sub]
                 img_depth_r = img_depth_r[:sub]
                 img_meta = img_meta[:sub]
-                img_label = img_label[:sub]
+                #img_label = img_label[:sub]
 
         # If training with pix2pix + cascade, load real dataset as input to the discriminator
         if isTest is False:
-            img_real_list = os.listdir(cfg.REAL.DATASET)
-            img_real_list = [folder_name for folder_name in img_real_list if folder_name[0] in ['0', '1']]
-            img_real_L = [os.path.join(cfg.REAL.DATASET, folder_name, cfg.REAL.LEFT) for folder_name in img_real_list]
-            img_real_R = [os.path.join(cfg.REAL.DATASET, folder_name, cfg.REAL.RIGHT) for folder_name in img_real_list]
-            img_real = img_real_L + img_real_R
-            np.random.shuffle(img_real)
-            return img_L, img_R, img_depth_l, img_depth_r, img_meta, img_label, img_real
+            img_real_list = cfg.SPLIT.TRAIN
+            with open(img_real_list, 'r') as f:
+                prefix = [line.strip() for line in f]
+                img_sim_L = [os.path.join(cfg.DIR.DATASET, p, cfg.SPLIT.LEFT) for p in prefix]
+                img_sim_R = [os.path.join(cfg.DIR.DATASET, p, cfg.SPLIT.RIGHT) for p in prefix]
+                img_sim = img_sim_L + img_sim_R
+            np.random.shuffle(img_sim)
+            return img_L, img_R, img_depth_l, img_depth_r, img_meta, img_sim
         else:
-            return img_L, img_R, img_depth_l, img_depth_r, img_meta, img_label
+            return img_L, img_R, img_depth_l, img_depth_r, img_meta#, img_label
 
     @staticmethod
     def __data_augmentation__(gaussian_blur=False, color_jitter=False):
@@ -113,14 +117,14 @@ class MessytableDataset(Dataset):
         return len(self.img_L)
 
     def __getitem__(self, idx):
-        img_L_rgb = (np.array(Image.open(self.img_L[idx]))[:, :, :1] - 127.5) / 127.5   # [H, W, 1], in (0, 1)
-        img_R_rgb = (np.array(Image.open(self.img_R[idx]))[:, :, :1] - 127.5) / 127.5   # [H, W, 1], in (0, 1)
+        img_L_rgb = (np.array(Image.open(self.img_L[idx]))[:, :, :3] - 127.5) / 127.5   # [H, W, 1], in (0, 1)
+        img_R_rgb = (np.array(Image.open(self.img_R[idx]))[:, :, :3] - 127.5) / 127.5   # [H, W, 1], in (0, 1)
         img_depth_l = np.array(Image.open(self.img_depth_l[idx])) / 1000    # convert from mm to m
         img_depth_r = np.array(Image.open(self.img_depth_r[idx])) / 1000    # convert from mm to m
         img_meta = load_pickle(self.img_meta[idx])
 
         # For unpaired pix2pix, load a random real image from real dataset [H, W, 1], in value range (-1, 1)
-        img_real_rgb = (np.array(Image.open(random.choice(self.img_real)))[:, :, None] - 127.5) / 127.5
+        img_sim_rgb = (np.array(Image.open(random.choice(self.img_sim)))[:, :, 3] - 127.5) / 127.5
 
         # Convert depth map to disparity map
         extrinsic_l = img_meta['extrinsic_l']
@@ -147,12 +151,12 @@ class MessytableDataset(Dataset):
         img_depth_l = img_depth_l[2*x: 2*(x+th), 2*y: 2*(y+tw)]
         img_disp_r = img_disp_r[2*x: 2*(x+th), 2*y: 2*(y+tw)]
         img_depth_r = img_depth_r[2*x: 2*(x+th), 2*y: 2*(y+tw)]
-        img_real_rgb = img_real_rgb[2*x: 2*(x+th), 2*y: 2*(y+tw)]  # real original res in 1080*1920
+        img_sim_rgb = img_sim_rgb[2*x: 2*(x+th), 2*y: 2*(y+tw)]  # real original res in 1080*1920
 
         item = {}
         item['img_L'] = torch.tensor(img_L_rgb, dtype=torch.float32).permute(2, 0, 1)  # [bs, 3, H, W]
         item['img_R'] = torch.tensor(img_R_rgb, dtype=torch.float32).permute(2, 0, 1)  # [bs, 3, H, W]
-        item['img_real'] = torch.tensor(img_real_rgb, dtype=torch.float32).permute(2, 0, 1)  # [bs, 3, 2*H, 2*W]
+        item['img_sim'] = torch.tensor(img_sim_rgb, dtype=torch.float32).permute(2, 0, 1)  # [bs, 3, 2*H, 2*W]
         item['img_disp_l'] = torch.tensor(img_disp_l, dtype=torch.float32).unsqueeze(0)  # [bs, 1, H, W] in dataloader
         item['img_depth_l'] = torch.tensor(img_depth_l, dtype=torch.float32).unsqueeze(0)  # [bs, 1, H, W]
         item['img_disp_r'] = torch.tensor(img_disp_r, dtype=torch.float32).unsqueeze(0)  # [bs, 1, H, W]

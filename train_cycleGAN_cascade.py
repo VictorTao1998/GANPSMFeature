@@ -70,24 +70,26 @@ logger.info(f'Running with {num_gpus} GPUs')
 # python -m torch.distributed.launch train_cycleGAN_cascade.py --config-file configs/remote_train.yaml --summary-freq 32 --update-g-freq 10 --logdir ../train_8_14_cascade/debug --debug
 
 
-def train(gan_model, cascade_model, cascade_optimizer, TrainImgLoader, ValImgLoader):
+def train(gan_model, model, feaex, TrainImgLoader, ValImgLoader):
     cur_err = np.inf    # store best result
 
     for epoch_idx in range(cfg.SOLVER.EPOCHS):
         # Adjust learning rate
         adjust_learning_rate(gan_model.optimizer_G, epoch_idx, cfg.SOLVER.LR_G, cfg.SOLVER.LR_EPOCHS)
         adjust_learning_rate(gan_model.optimizer_D, epoch_idx, cfg.SOLVER.LR_D, cfg.SOLVER.LR_EPOCHS)
-        adjust_learning_rate(cascade_optimizer, epoch_idx, cfg.SOLVER.LR_CASCADE, cfg.SOLVER.LR_EPOCHS)
+        #adjust_learning_rate(cascade_optimizer, epoch_idx, cfg.SOLVER.LR_CASCADE, cfg.SOLVER.LR_EPOCHS)
 
         # One epoch training loop
         avg_train_scalars_gan = AverageMeterDict()
-        avg_train_scalars_cascade = AverageMeterDict()
+        #avg_train_scalars_cascade = AverageMeterDict()
         for batch_idx, sample in enumerate(TrainImgLoader):
+            realsample = next(iter(RealImgLoader))
+            print(batch_idx)
             global_step = (len(TrainImgLoader) * epoch_idx + batch_idx) * cfg.SOLVER.BATCH_SIZE
             do_summary = global_step % args.summary_freq == 0
             # Train one sample
             scalar_outputs_gan, scalar_outputs_cascade, img_outputs_gan, img_outputs_cascade = \
-                train_sample(sample, gan_model, cascade_model, cascade_optimizer, isTrain=True)
+                train_sample(sample, realsample, gan_model, model, feaex, isTrain=True)
             # Save result to tensorboard
             if (not is_distributed) or (dist.get_rank() == 0):
                 scalar_outputs_gan = tensor2float(scalar_outputs_gan)
@@ -180,20 +182,30 @@ def train(gan_model, cascade_model, cascade_optimizer, TrainImgLoader, ValImgLoa
         gc.collect()
 
 
-def train_sample(sample, gan_model, cascade_model, cascade_optimizer, isTrain=True):
+def train_sample(simsample, realsample, gan_model, model, feaex, isTrain=True):
+    feaex.eval()
     if isTrain:
         gan_model.train()
-        cascade_model.train()
     else:
         gan_model.eval()
-        cascade_model.eval()
+    
+    simfeaL, simfeaR, sim_gt = feaex(simsample['left'].cuda()), feaex(simsample['right'].cuda()), simsample['disparity'].cuda()
+    realfeaL, realfeaR, real_gt = feaex(realsample['left'].cuda()), feaex(realsample['right'].cuda()), realsample['disparity'].cuda()
+
+    disp_gt_t = real_gt.reshape((args.cbatch_size,1,args.crop_height,args.crop_width))
+    real_gt = apply_disparity_cu(disp_gt_t, disp_gt_t.int())
+
+    #c_gan.set_input(simfeaL.detach(), simfeaR.detach(), realfeaL.detach(), realfeaR.detach(), real_gt)         # unpack data from dataset and apply preprocessing
+    #c_gan.optimize_parameters()
+
+    original_output = model(realsample['left'].cuda(), realsample['right'].cuda())
 
     # Train on GAN
-    img_L = sample['img_L'].to(cuda_device)  # [bs, 1, H, W]
-    img_R = sample['img_R'].to(cuda_device)  # [bs, 1, H, W]
-    img_real = sample['img_real'].to(cuda_device)  # [bs, 1, 2H, 2W]
-    img_real = F.interpolate(img_real, scale_factor=0.5, mode='bilinear',
-                             recompute_scale_factor=False, align_corners=False)
+    #img_L = sample['img_L'].to(cuda_device)  # [bs, 1, H, W]
+    #img_R = sample['img_R'].to(cuda_device)  # [bs, 1, H, W]
+    #img_real = sample['img_real'].to(cuda_device)  # [bs, 1, 2H, 2W]
+    #img_real = F.interpolate(img_real, scale_factor=0.5, mode='bilinear',
+    #                         recompute_scale_factor=False, align_corners=False)
     input_sample = {'img_L': img_L, 'img_R': img_R, 'img_real': img_real}
     gan_model.set_input(input_sample)
     if isTrain:
@@ -295,8 +307,9 @@ def train_sample(sample, gan_model, cascade_model, cascade_optimizer, isTrain=Tr
 
 if __name__ == '__main__':
     # Obtain dataloader
-    train_dataset = MessytableDataset(cfg.SPLIT.TRAIN, debug=args.debug, sub=600)
-    val_dataset = MessytableDataset(cfg.SPLIT.VAL, debug=args.debug, sub=100)
+    train_dataset = MessytableDataset(cfg.SPLIT.TRAIN, debug=args.debug, sub=600, isReal=False)
+    real_dataset = MessytableDataset(cfg.REAL.TRAIN, debug=args.debug, sub=100, isReal=True)
+    """
     if is_distributed:
         train_sampler = torch.utils.data.DistributedSampler(train_dataset, num_replicas=dist.get_world_size(),
                                                             rank=dist.get_rank())
@@ -308,11 +321,15 @@ if __name__ == '__main__':
         ValImgLoader = torch.utils.data.DataLoader(val_dataset, cfg.SOLVER.BATCH_SIZE, sampler=val_sampler,
                                                    num_workers=cfg.SOLVER.NUM_WORKER, drop_last=False, pin_memory=True)
     else:
-        TrainImgLoader = torch.utils.data.DataLoader(train_dataset, batch_size=cfg.SOLVER.BATCH_SIZE,
-                                                     shuffle=True, num_workers=cfg.SOLVER.NUM_WORKER, drop_last=True)
+        """
 
-        ValImgLoader = torch.utils.data.DataLoader(val_dataset, batch_size=cfg.SOLVER.BATCH_SIZE,
-                                                   shuffle=False, num_workers=cfg.SOLVER.NUM_WORKER, drop_last=False)
+    real_sampler = torch.utils.data.RandomSampler(real_dataset)
+
+    TrainImgLoader = torch.utils.data.DataLoader(train_dataset, batch_size=cfg.SOLVER.BATCH_SIZE,
+                                                    shuffle=True, num_workers=cfg.SOLVER.NUM_WORKER, drop_last=True)
+
+    RealImgLoader = torch.utils.data.DataLoader(real_dataset, batch_size=cfg.SOLVER.BATCH_SIZE, sampler=real_sampler,
+                                                shuffle=False, num_workers=cfg.SOLVER.NUM_WORKER, drop_last=False)
 
     # Create GAN model
     gan_model = CycleGANModel()
@@ -320,6 +337,7 @@ if __name__ == '__main__':
     gan_model.set_distributed(is_distributed=is_distributed, local_rank=args.local_rank)
 
     # Create Cascade model
+    """
     cascade_model = CascadeNet(
         maxdisp=cfg.ARGS.MAX_DISP,
         ndisps=[int(nd) for nd in cfg.ARGS.NDISP],
@@ -335,6 +353,33 @@ if __name__ == '__main__':
             cascade_model, device_ids=[args.local_rank], output_device=args.local_rank)
     else:
         cascade_model = torch.nn.DataParallel(cascade_model)
+    """
+
+    if args.cmodel == 'stackhourglass':
+    model = stackhourglass(args.maxdisp)
+    elif args.cmodel == 'basic':
+        model = basic(args.maxdisp)
+    else:
+        print('no model')
+
+    if args.cuda:
+        model = nn.DataParallel(model)
+        model.cuda()
+
+    if args.loadmodel is not None:
+        print('need pretrain')
+
+    print('Load pretrained model')
+    pretrain_dict = torch.load(args.loadmodel)
+    #pre_train_dict = OrderedDict([(k.replace("module.",""), v) for k, v in pretrain_dict['state_dict'].items()])
+
+    model.load_state_dict(pre_train_dict['state_dict'])
+
+
+    print('Number of model parameters: {}'.format(sum([p.data.nelement() for p in model.parameters()])))
+
+    feaex = model.module.feature_extraction.ganfeature
+    model.module.feature_extraction.gan_train = False
 
     # Start training
-    train(gan_model, cascade_model, cascade_optimizer, TrainImgLoader, ValImgLoader)
+    train(gan_model, model, feaex, TrainImgLoader, RealImgLoader)
