@@ -134,7 +134,7 @@ class MessytableDataset(Dataset):
         img_sim_rgb = np.array(Image.open(random.choice(self.img_sim)).convert('RGB'))
 
         img_L_rgb, img_R_rgb, img_sim_rgb = process(img_L_rgb), process(img_R_rgb), process(img_sim_rgb)
-        print(img_L_rgb.shape, img_R_rgb.shape, img_sim_rgb.shape)
+        #print(img_L_rgb.shape, img_R_rgb.shape, img_sim_rgb.shape)
 
         # Convert depth map to disparity map
         extrinsic_l = img_meta['extrinsic_l']
