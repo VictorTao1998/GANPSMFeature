@@ -117,10 +117,12 @@ class MessytableDataset(Dataset):
         return len(self.img_L)
 
     def __getitem__(self, idx):
+        process = self.__data_augmentation__()
         #print(self.img_L, np.array(Image.open(self.img_L[idx]).convert('RGB')).shape)
         #print(np.array(Image.open(self.img_L[idx])).shape, np.array(Image.open(self.img_L[idx]).convert('RGB')).shape, np.array(Image.open(self.img_L[idx]).convert('RGB').resize((540,960))).shape)
-        img_L_rgb = (np.array(Image.open(self.img_L[idx]).convert('RGB').resize((960,540))) - 127.5) / 127.5   # [H, W, 1], in (0, 1)
-        img_R_rgb = (np.array(Image.open(self.img_R[idx]).convert('RGB').resize((960,540))) - 127.5) / 127.5   # [H, W, 1], in (0, 1)
+        img_L_rgb = np.array(Image.open(self.img_L[idx]).convert('RGB').resize((960,540)))   # [H, W, 1], in (0, 1)
+        img_R_rgb = np.array(Image.open(self.img_R[idx]).convert('RGB').resize((960,540)))    # [H, W, 1], in (0, 1)
+        
         #print(img_L_rgb.shape)
         img_depth_l = np.array(Image.open(self.img_depth_l[idx]).resize((960,540))) / 1000    # convert from mm to m
         img_depth_r = np.array(Image.open(self.img_depth_r[idx]).resize((960,540))) / 1000    # convert from mm to m
@@ -129,7 +131,9 @@ class MessytableDataset(Dataset):
 
         # For unpaired pix2pix, load a random real image from real dataset [H, W, 1], in value range (-1, 1)
         
-        img_sim_rgb = (np.array(Image.open(random.choice(self.img_sim)).convert('RGB')) - 127.5) / 127.5
+        img_sim_rgb = np.array(Image.open(random.choice(self.img_sim)).convert('RGB'))
+
+        img_L_rgb, img_R_rgb, img_sim_rgb = process(img_L_rgb), process(img_R_rgb), process(img_sim_rgb)
         #print(img_sim_rgb.shape)
 
         # Convert depth map to disparity map

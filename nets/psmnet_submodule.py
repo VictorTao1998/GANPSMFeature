@@ -77,6 +77,7 @@ class FeatureExtraction(nn.Module):
     def __init__(self, gan_train):
         super(FeatureExtraction, self).__init__()
         # CNN module
+        self.gan_train = gan_train
         self.inplanes = 32
         # conv0_1, conv0_2, conv0_3
         self.ganfeature = nn.Sequential(convbn(3, 3, 3, 1, 1, 1),
@@ -155,6 +156,7 @@ class FeatureExtraction(nn.Module):
         :return:    [bs, 32, H/4, W/4]
         """
         if self.gan_train:
+            print('success')
             gan_fea = x
         else:
             gan_fea = self.ganfeature(x)

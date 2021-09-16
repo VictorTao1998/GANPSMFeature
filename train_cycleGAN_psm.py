@@ -194,6 +194,8 @@ def train_sample(sample, gan_model, psmnet_model, feaex, isTrain=True):
         psmnet_model.eval()
         feaex.eval()
 
+    psmnet_model.module.feature_extraction.gan_train = True
+
     # Train on GAN
     img_L = sample['img_L'].to(cuda_device)  # [bs, 1, H, W]
     img_R = sample['img_R'].to(cuda_device)  # [bs, 1, H, W]
@@ -207,10 +209,10 @@ def train_sample(sample, gan_model, psmnet_model, feaex, isTrain=True):
     #                         recompute_scale_factor=False, align_corners=False)
 
     #print(img_L.shape, img_R.shape, img_sim.shape)
-    fea_L, fea_R, fea_sim = feaex(img_L).detach(), feaex(img_R).detach(), feaex(img_sim).detach()
-    fea_L = fea_L[:,1,:,:].reshape((fea_L.shape[0], 1, fea_L.shape[2], fea_L.shape[3]))
-    fea_R = fea_R[:,1,:,:].reshape((fea_R.shape[0], 1, fea_R.shape[2], fea_R.shape[3]))
-    fea_sim = fea_sim[:,1,:,:].reshape((fea_sim.shape[0], 1, fea_sim.shape[2], fea_sim.shape[3]))
+    fea_L_f, fea_R_f, fea_sim_f = feaex(img_L).detach(), feaex(img_R).detach(), feaex(img_sim).detach()
+    fea_L = fea_L_f[:,1,:,:].reshape((fea_L_f.shape[0], 1, fea_L_f.shape[2], fea_L_f.shape[3]))
+    fea_R = fea_R_f[:,1,:,:].reshape((fea_R_f.shape[0], 1, fea_R_f.shape[2], fea_R_f.shape[3]))
+    fea_sim = fea_sim_f[:,1,:,:].reshape((fea_sim_f.shape[0], 1, fea_sim_f.shape[2], fea_sim_f.shape[3]))
 
     input_sample = {'img_L': fea_L, 'img_R': fea_R, 'img_sim': fea_sim}
     gan_model.set_input(input_sample)
@@ -244,14 +246,14 @@ def train_sample(sample, gan_model, psmnet_model, feaex, isTrain=True):
 
     mask = (disp_gt < cfg.ARGS.MAX_DISP) * (disp_gt > 0)  # Note in training we do not exclude bg
     if isTrain:
-        pred_disp3 = psmnet_model(img_L, img_R)
+        pred_disp3 = psmnet_model(fea_L_f, fea_R_f)
         pred_disp = pred_disp3
         #loss_psmnet = 0.5 * F.smooth_l1_loss(pred_disp1[mask], disp_gt[mask], reduction='mean') \
         #       + 0.7 * F.smooth_l1_loss(pred_disp2[mask], disp_gt[mask], reduction='mean') \
         #       + F.smooth_l1_loss(pred_disp3[mask], disp_gt[mask], reduction='mean')
     else:
         with torch.no_grad():
-            pred_disp = psmnet_model(img_L, img_R)
+            pred_disp = psmnet_model(fea_L_f, fea_R_f)
             #loss_psmnet = F.smooth_l1_loss(pred_disp[mask], disp_gt[mask], reduction='mean')
 
     # Backward and optimization
