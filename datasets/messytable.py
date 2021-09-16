@@ -120,8 +120,8 @@ class MessytableDataset(Dataset):
         process = self.__data_augmentation__()
         #print(self.img_L, np.array(Image.open(self.img_L[idx]).convert('RGB')).shape)
         #print(np.array(Image.open(self.img_L[idx])).shape, np.array(Image.open(self.img_L[idx]).convert('RGB')).shape, np.array(Image.open(self.img_L[idx]).convert('RGB').resize((540,960))).shape)
-        img_L_rgb = np.array(Image.open(self.img_L[idx]).convert('RGB').resize((960,540)))   # [H, W, 1], in (0, 1)
-        img_R_rgb = np.array(Image.open(self.img_R[idx]).convert('RGB').resize((960,540)))    # [H, W, 1], in (0, 1)
+        img_L_rgb = Image.open(self.img_L[idx]).convert('RGB').resize((960,540))  # [H, W, 1], in (0, 1)
+        img_R_rgb = Image.open(self.img_R[idx]).convert('RGB').resize((960,540))    # [H, W, 1], in (0, 1)
         
         #print(img_L_rgb.shape)
         img_depth_l = np.array(Image.open(self.img_depth_l[idx]).resize((960,540))) / 1000    # convert from mm to m
@@ -133,7 +133,7 @@ class MessytableDataset(Dataset):
         
         img_sim_rgb = np.array(Image.open(random.choice(self.img_sim)).convert('RGB'))
 
-        img_L_rgb, img_R_rgb, img_sim_rgb = process(img_L_rgb), process(img_R_rgb), process(img_sim_rgb)
+        #img_L_rgb, img_R_rgb, img_sim_rgb = process(img_L_rgb), process(img_R_rgb), process(img_sim_rgb)
         #print(img_L_rgb.shape, img_R_rgb.shape, img_sim_rgb.shape)
 
         # Convert depth map to disparity map
@@ -155,15 +155,23 @@ class MessytableDataset(Dataset):
         th, tw = cfg.ARGS.CROP_HEIGHT, cfg.ARGS.CROP_WIDTH
         x = random.randint(0, h - th)
         y = random.randint(0, w - tw)
-        img_L_rgb = img_L_rgb[x:(x+th), y:(y+tw)]
-        img_R_rgb = img_R_rgb[x:(x+th), y:(y+tw)]
+
+        img_L_rgb = img_L_rgb.crop((x, y, x + th, y + tw))
+        img_R_rgb = img_R_rgb.crop((x, y, x + th, y + tw))
+        img_sim_rgb = img_sim_rgb.crop((x, y, x + th, y + tw))
+
+        #disparity_R = disparity_R[y1:y1 + crop_h, x1:x1 + crop_w]
+        #img_L_rgb = img_L_rgb[x:(x+th), y:(y+tw)]
+        #img_R_rgb = img_R_rgb[x:(x+th), y:(y+tw)]
         img_disp_l = img_disp_l[x:(x+th), y:(y+tw)]  # depth original res in 1080*1920
         img_depth_l = img_depth_l[x:(x+th), y:(y+tw)]
         img_disp_r = img_disp_r[x:(x+th), y:(y+tw)]
         img_depth_r = img_depth_r[x:(x+th), y:(y+tw)]
         #print('before ', img_sim_rgb.shape, x, y, th, tw)
-        img_sim_rgb = img_sim_rgb[x:(x+th), y:(y+tw)]  # real original res in 1080*1920
+        #img_sim_rgb = img_sim_rgb[x:(x+th), y:(y+tw)]  # real original res in 1080*1920
         #print('after ', img_sim_rgb.shape)
+
+        img_L_rgb, img_R_rgb, img_sim_rgb = process(img_L_rgb), process(img_R_rgb), process(img_sim_rgb)
 
         
 
