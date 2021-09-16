@@ -151,7 +151,7 @@ class MessytableDataset(Dataset):
         img_disp_r[mask] = focal_length * baseline / img_depth_r[mask]
 
         # random crop the image to 256 * 512
-        h, w = img_L_rgb.shape[:2]
+        h, w = img_L_rgb.shape[1:]
         th, tw = cfg.ARGS.CROP_HEIGHT, cfg.ARGS.CROP_WIDTH
         x = random.randint(0, h - th)
         y = random.randint(0, w - tw)
@@ -168,9 +168,9 @@ class MessytableDataset(Dataset):
         
 
         item = {}
-        item['img_L'] = torch.tensor(img_L_rgb, dtype=torch.float32).permute(2, 0, 1)  # [bs, 3, H, W]
-        item['img_R'] = torch.tensor(img_R_rgb, dtype=torch.float32).permute(2, 0, 1)  # [bs, 3, H, W]
-        item['img_sim'] = torch.tensor(img_sim_rgb, dtype=torch.float32).permute(2, 0, 1)  # [bs, 3, 2*H, 2*W]
+        item['img_L'] = torch.tensor(img_L_rgb, dtype=torch.float32)  # [bs, 3, H, W]
+        item['img_R'] = torch.tensor(img_R_rgb, dtype=torch.float32)  # [bs, 3, H, W]
+        item['img_sim'] = torch.tensor(img_sim_rgb, dtype=torch.float32)  # [bs, 3, 2*H, 2*W]
         item['img_disp_l'] = torch.tensor(img_disp_l, dtype=torch.float32).unsqueeze(0)  # [bs, 1, H, W] in dataloader
         item['img_depth_l'] = torch.tensor(img_depth_l, dtype=torch.float32).unsqueeze(0)  # [bs, 1, H, W]
         item['img_disp_r'] = torch.tensor(img_disp_r, dtype=torch.float32).unsqueeze(0)  # [bs, 1, H, W]
