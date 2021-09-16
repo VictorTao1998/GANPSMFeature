@@ -72,11 +72,12 @@ def train(gan_model, psmnet_model, feaex, TrainImgLoader, ValImgLoader):
     cur_err = np.inf    # store best result
 
     for epoch_idx in range(cfg.SOLVER.EPOCHS):
+        pirnt('epoch: ', epoch_idx)
         # One epoch training loop
         avg_train_scalars_gan = AverageMeterDict()
         #avg_train_scalars_psmnet = AverageMeterDict()
         for batch_idx, sample in enumerate(TrainImgLoader):
-            print(batch_idx)
+            print('iter: ', batch_idx)
             if batch_idx > 5:
                 break
             global_step = (len(TrainImgLoader) * epoch_idx + batch_idx) * cfg.SOLVER.BATCH_SIZE
