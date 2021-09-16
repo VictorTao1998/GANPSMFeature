@@ -24,7 +24,7 @@ class MessytableDataset(Dataset):
         :param debug: Debug mode, load less data
         :param sub: If debug mode is enabled, sub will be the number of data loaded
         """
-        self.img_L, self.img_R, self.img_depth_l, self.img_depth_r, self.img_meta, self.img_label, self.img_real = \
+        self.img_L, self.img_R, self.img_depth_l, self.img_depth_r, self.img_meta, self.img_sim = \
             self.__get_split_files__(split_file, debug, sub, isTest=False, onReal=isReal)
         self.gaussian_blur = gaussian_blur
         self.color_jitter = color_jitter
