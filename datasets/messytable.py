@@ -118,6 +118,7 @@ class MessytableDataset(Dataset):
 
     def __getitem__(self, idx):
         #print(self.img_L, np.array(Image.open(self.img_L[idx]).convert('RGB')).shape)
+        print(np.array(Image.open(self.img_L[idx])).shape, np.array(Image.open(self.img_L[idx]).convert('RGB')).shape, np.array(Image.open(self.img_L[idx]).convert('RGB').resize((540,960))).shape)
         img_L_rgb = (np.array(Image.open(self.img_L[idx]).convert('RGB').resize((540,960))) - 127.5) / 127.5   # [H, W, 1], in (0, 1)
         img_R_rgb = (np.array(Image.open(self.img_R[idx]).convert('RGB').resize((540,960))) - 127.5) / 127.5   # [H, W, 1], in (0, 1)
         #print(img_L_rgb.shape)
