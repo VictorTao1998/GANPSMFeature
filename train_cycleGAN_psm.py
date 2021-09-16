@@ -197,13 +197,15 @@ def train_sample(sample, gan_model, psmnet_model, feaex, isTrain=True):
     img_L = sample['img_L'].to(cuda_device)  # [bs, 1, H, W]
     img_R = sample['img_R'].to(cuda_device)  # [bs, 1, H, W]
     img_sim = sample['img_sim'].to(cuda_device)  # [bs, 1, 2H, 2W]
-    
-    img_L = F.interpolate(img_L, scale_factor=0.5, mode='bilinear',
-                             recompute_scale_factor=False, align_corners=False)
-    img_R = F.interpolate(img_R, scale_factor=0.5, mode='bilinear',
-                             recompute_scale_factor=False, align_corners=False)
 
     print(img_L.shape, img_R.shape, img_sim.shape)
+    
+    #img_L = F.interpolate(img_L, scale_factor=0.5, mode='bilinear',
+    #                         recompute_scale_factor=False, align_corners=False)
+    #img_R = F.interpolate(img_R, scale_factor=0.5, mode='bilinear',
+    #                         recompute_scale_factor=False, align_corners=False)
+
+    #print(img_L.shape, img_R.shape, img_sim.shape)
     fea_L, fea_R, fea_sim = feaex(img_L), feaex(img_R), feaex(img_sim)
     fea_L = fea_L[:,1,:,:].reshape((fea_L.shape[0], 1, fea_L.shape[2], fea_L.shape[3]))
     fea_R = fea_R[:,1,:,:].reshape((fea_R.shape[0], 1, fea_R.shape[2], fea_R.shape[3]))
@@ -227,15 +229,15 @@ def train_sample(sample, gan_model, psmnet_model, feaex, isTrain=True):
 
     # Resize the 2x resolution disp and depth back to H * W
     # Note this should go before apply_disparity_cu
-    disp_gt = F.interpolate(disp_gt, scale_factor=0.5, mode='nearest',
-                             recompute_scale_factor=False)  # [bs, 1, H, W]
-    depth_gt = F.interpolate(depth_gt, scale_factor=0.5, mode='nearest',
-                             recompute_scale_factor=False)  # [bs, 1, H, W]
+    #disp_gt = F.interpolate(disp_gt, scale_factor=0.5, mode='nearest',
+    #                         recompute_scale_factor=False)  # [bs, 1, H, W]
+    #depth_gt = F.interpolate(depth_gt, scale_factor=0.5, mode='nearest',
+    #                         recompute_scale_factor=False)  # [bs, 1, H, W]
 
     if args.warp_op:
         img_disp_r = sample['img_disp_r'].to(cuda_device)
-        img_disp_r = F.interpolate(img_disp_r, scale_factor=0.5, mode='nearest',
-                                   recompute_scale_factor=False)
+        #img_disp_r = F.interpolate(img_disp_r, scale_factor=0.5, mode='nearest',
+        #                           recompute_scale_factor=False)
         disp_gt = apply_disparity_cu(img_disp_r, img_disp_r.type(torch.int))  # [bs, 1, H, W]
         del img_disp_r
 
