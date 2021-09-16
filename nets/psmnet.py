@@ -5,7 +5,7 @@ Feature: Hourglass and PSMNet (stacked hourglass) module
 
 import math
 
-from psmnet_submodule import *
+from nets.psmnet_submodule import *
 
 
 class hourglass(nn.Module):
