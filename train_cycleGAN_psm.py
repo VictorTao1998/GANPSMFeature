@@ -119,17 +119,16 @@ def train(gan_model, psmnet_model, feaex, TrainImgLoader, ValImgLoader):
                         'D_B': gan_model.netD_B.state_dict(),
                         'PSMNet': psmnet_model.state_dict(),
                         'optimizerG': gan_model.optimizer_G.state_dict(),
-                        'optimizerD': gan_model.optimizer_D.state_dict(),
-                        'optimizerPSMNet': psmnet_optimizer.state_dict()
+                        'optimizerD': gan_model.optimizer_D.state_dict()
                     }
                     save_filename = os.path.join(args.logdir, 'models', f'model_{global_step}.pth')
                     torch.save(checkpoint_data, save_filename)
 
                     # Get average results among all batches
                     total_err_metric_gan = avg_train_scalars_gan.mean()
-                    total_err_metric_psmnet = avg_train_scalars_psmnet.mean()
+                    #total_err_metric_psmnet = avg_train_scalars_psmnet.mean()
                     logger.info(f'Step {global_step} train gan    : {total_err_metric_gan}')
-                    logger.info(f'Step {global_step} train cascade: {total_err_metric_psmnet}')
+                    #logger.info(f'Step {global_step} train cascade: {total_err_metric_psmnet}')
         gc.collect()
         """
         # One epoch validation loop
@@ -343,7 +342,7 @@ if __name__ == '__main__':
 
     # Create PSMNet model
     psmnet_model = PSMNet(maxdisp=cfg.ARGS.MAX_DISP).to(cuda_device)
-    psmnet_optimizer = torch.optim.Adam(psmnet_model.parameters(), lr=cfg.SOLVER.LR_CASCADE, betas=(0.9, 0.999))
+    #psmnet_optimizer = torch.optim.Adam(psmnet_model.parameters(), lr=cfg.SOLVER.LR_CASCADE, betas=(0.9, 0.999))
     if is_distributed:
         psmnet_model = torch.nn.parallel.DistributedDataParallel(
             psmnet_model, device_ids=[args.local_rank], output_device=args.local_rank)
