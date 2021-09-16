@@ -28,6 +28,8 @@ _C.SPLIT.LABEL = 'irL_label_image.png'
 # Configuration for testing on real dataset
 _C.REAL = CN()
 _C.REAL.DATASET = '/code/real_dataset_local_v9'  # path to your real testing dataset
+_C.REAL.DEPTHPATH = '/cephfs/datasets/iccv_pnp/messy-table-dataset/real_v9/training'
+_C.REAL.TRAIN: '/cephfs/jianyu/newTrain.txt'
 _C.REAL.LEFT = '1024_irL_real_1080.png'
 _C.REAL.RIGHT = '1024_irR_real_1080.png'
 _C.REAL.PAD_WIDTH = 960
@@ -58,6 +60,8 @@ _C.ARGS.USING_NS = True             # using neighbor search
 _C.ARGS.NS_SIZE = 3                 # nb_size
 _C.ARGS.CROP_HEIGHT = 256           # crop height
 _C.ARGS.CROP_WIDTH = 512            # crop width
+_C.ARGS.TEST_CROP_HEIGHT = 540           # crop height
+_C.ARGS.TEST_CROP_WIDTH = 960            # crop width
 
 # Data Augmentation
 _C.DATA_AUG = CN()
