@@ -76,6 +76,7 @@ def train(gan_model, psmnet_model, feaex, TrainImgLoader, ValImgLoader):
         avg_train_scalars_gan = AverageMeterDict()
         #avg_train_scalars_psmnet = AverageMeterDict()
         for batch_idx, sample in enumerate(TrainImgLoader):
+            print(batch_idx)
             global_step = (len(TrainImgLoader) * epoch_idx + batch_idx) * cfg.SOLVER.BATCH_SIZE
             if global_step > cfg.SOLVER.STEPS:
                 break
