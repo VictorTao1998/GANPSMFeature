@@ -203,6 +203,7 @@ def train_sample(sample, gan_model, psmnet_model, feaex, isTrain=True):
     img_R = F.interpolate(img_R, scale_factor=0.5, mode='bilinear',
                              recompute_scale_factor=False, align_corners=False)
 
+    print(img_L.shape, img_R.shape, img_sim.shape)
     fea_L, fea_R, fea_sim = feaex(img_L), feaex(img_R), feaex(img_sim)
     fea_L = fea_L[:,1,:,:].reshape((fea_L.shape[0], 1, fea_L.shape[2], fea_L.shape[3]))
     fea_R = fea_R[:,1,:,:].reshape((fea_R.shape[0], 1, fea_R.shape[2], fea_R.shape[3]))

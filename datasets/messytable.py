@@ -120,7 +120,7 @@ class MessytableDataset(Dataset):
         #print(self.img_L, np.array(Image.open(self.img_L[idx]).convert('RGB')).shape)
         img_L_rgb = (np.array(Image.open(self.img_L[idx]).convert('RGB')) - 127.5) / 127.5   # [H, W, 1], in (0, 1)
         img_R_rgb = (np.array(Image.open(self.img_R[idx]).convert('RGB')) - 127.5) / 127.5   # [H, W, 1], in (0, 1)
-        print(img_L_rgb.shape)
+        #print(img_L_rgb.shape)
         img_depth_l = np.array(Image.open(self.img_depth_l[idx])) / 1000    # convert from mm to m
         img_depth_r = np.array(Image.open(self.img_depth_r[idx])) / 1000    # convert from mm to m
         img_meta = load_pickle(self.img_meta[idx])
