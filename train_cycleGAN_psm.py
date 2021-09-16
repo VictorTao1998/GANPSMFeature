@@ -206,7 +206,7 @@ def train_sample(sample, gan_model, psmnet_model, feaex, isTrain=True):
     #                         recompute_scale_factor=False, align_corners=False)
 
     #print(img_L.shape, img_R.shape, img_sim.shape)
-    fea_L, fea_R, fea_sim = feaex(img_L), feaex(img_R), feaex(img_sim)
+    fea_L, fea_R, fea_sim = feaex(img_L).detach(), feaex(img_R).detach(), feaex(img_sim).detach()
     fea_L = fea_L[:,1,:,:].reshape((fea_L.shape[0], 1, fea_L.shape[2], fea_L.shape[3]))
     fea_R = fea_R[:,1,:,:].reshape((fea_R.shape[0], 1, fea_R.shape[2], fea_R.shape[3]))
     fea_sim = fea_sim[:,1,:,:].reshape((fea_sim.shape[0], 1, fea_sim.shape[2], fea_sim.shape[3]))
