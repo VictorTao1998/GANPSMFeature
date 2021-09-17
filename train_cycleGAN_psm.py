@@ -210,9 +210,10 @@ def train_sample(sample, gan_model, psmnet_model, feaex, isTrain=True):
 
     #print(img_L.shape, img_R.shape, img_sim.shape)
     fea_L_f, fea_R_f, fea_sim_f = img_L, img_R, img_sim #feaex(img_L).detach(), feaex(img_R).detach(), feaex(img_sim).detach()
-    fea_L = fea_L_f[:,1,:,:].reshape((fea_L_f.shape[0], 1, fea_L_f.shape[2], fea_L_f.shape[3]))
-    fea_R = fea_R_f[:,1,:,:].reshape((fea_R_f.shape[0], 1, fea_R_f.shape[2], fea_R_f.shape[3]))
-    fea_sim = fea_sim_f[:,1,:,:].reshape((fea_sim_f.shape[0], 1, fea_sim_f.shape[2], fea_sim_f.shape[3]))
+    print(fea_L_f[0,0,0,0] == fea_L_f[0,1,0,0])
+    fea_L = fea_L_f[:,0,:,:].reshape((fea_L_f.shape[0], 1, fea_L_f.shape[2], fea_L_f.shape[3]))
+    fea_R = fea_R_f[:,0,:,:].reshape((fea_R_f.shape[0], 1, fea_R_f.shape[2], fea_R_f.shape[3]))
+    fea_sim = fea_sim_f[:,0,:,:].reshape((fea_sim_f.shape[0], 1, fea_sim_f.shape[2], fea_sim_f.shape[3]))
 
     input_sample = {'img_L': fea_L, 'img_R': fea_R, 'img_sim': fea_sim}
     gan_model.set_input(input_sample)
@@ -319,8 +320,8 @@ def train_sample(sample, gan_model, psmnet_model, feaex, isTrain=True):
 
 if __name__ == '__main__':
     # Obtain dataloader
-    train_dataset = MessytableDataset(cfg.REAL.TRAIN, debug=args.debug, sub=600, isReal=True)
-    val_dataset = MessytableDataset(cfg.REAL.TRAIN, debug=args.debug, sub=100, isReal=True)
+    train_dataset = MessytableDataset(cfg.SPLIT.TRAIN, debug=args.debug, sub=600, isReal=False)
+    val_dataset = MessytableDataset(cfg.SPLIT.VAL, debug=args.debug, sub=100, isReal=False)
     if is_distributed:
         train_sampler = torch.utils.data.DistributedSampler(train_dataset, num_replicas=dist.get_world_size(),
                                                             rank=dist.get_rank())
