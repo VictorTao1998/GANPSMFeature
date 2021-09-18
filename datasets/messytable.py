@@ -124,7 +124,7 @@ class MessytableDataset(Dataset):
         img_R_rgb = Image.open(self.img_R[idx]).convert('RGB')#.resize((960,540))    # [H, W, 1], in (0, 1)
         L_a = np.array(img_L_rgb)
         R_a = np.array(img_R_rgb)
-        print(L_a.shape)
+        print(L_a[0,0,1]==R_a[0,0,2])
         
         #print(img_L_rgb.shape)
         img_depth_l = np.array(Image.open(self.img_depth_l[idx]).resize((960,540))) / 1000    # convert from mm to m
