@@ -120,7 +120,7 @@ class MessytableDataset(Dataset):
         #process = self.__data_augmentation__()
         #print(self.img_L, np.array(Image.open(self.img_L[idx]).convert('RGB')).shape)
         #print(np.array(Image.open(self.img_L[idx])).shape, np.array(Image.open(self.img_L[idx]).convert('RGB')).shape, np.array(Image.open(self.img_L[idx]).convert('RGB').resize((540,960))).shape)
-        print(np.array(Image.open(self.img_L[idx])).shape)  
+        #print(np.array(Image.open(self.img_L[idx])).shape)  
         img_L_rgb = (np.array(Image.open(self.img_L[idx]))[:, :, :3] - 127.5) / 127.5   # [H, W, 1], in (0, 1)
         img_R_rgb = (np.array(Image.open(self.img_R[idx]))[:, :, :3] - 127.5) / 127.5
         L_a = np.array(img_L_rgb)
@@ -134,9 +134,9 @@ class MessytableDataset(Dataset):
         #print('other ', img_depth_l.shape)
 
         # For unpaired pix2pix, load a random real image from real dataset [H, W, 1], in value range (-1, 1)
-        print(np.array(Image.open(random.choice(self.img_sim)).convert('RGB')).shape)
+        #print(np.array(Image.open(random.choice(self.img_sim)).convert('RGB')).shape)
         img_sim_rgb = (np.array(Image.open(random.choice(self.img_sim)).convert('RGB'))[:, :, :3] - 127.5) / 127.5
-        print(img_sim_rgb.shape)
+        #print(img_sim_rgb.shape)
 
         #img_L_rgb, img_R_rgb, img_sim_rgb = process(img_L_rgb), process(img_R_rgb), process(img_sim_rgb)
         #print(img_L_rgb.shape, img_R_rgb.shape, img_sim_rgb.shape)
