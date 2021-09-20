@@ -69,8 +69,6 @@ def train(psmnet_model, psmnet_optimizer, TrainImgLoader, ValImgLoader):
         print('epoch: ', epoch_idx)
         avg_train_scalars_psmnet = AverageMeterDict()
         for batch_idx, sample in enumerate(TrainImgLoader):
-            if batch_idx > 5:
-                break
             global_step = (len(TrainImgLoader) * epoch_idx + batch_idx) * cfg.SOLVER.BATCH_SIZE
 
             # Adjust learning rate
@@ -114,8 +112,6 @@ def train(psmnet_model, psmnet_optimizer, TrainImgLoader, ValImgLoader):
         # One epoch validation loop
         avg_val_scalars_psmnet = AverageMeterDict()
         for batch_idx, sample in enumerate(ValImgLoader):
-            if batch_idx > 5:
-                break
             global_step = (len(ValImgLoader) * epoch_idx + batch_idx) * cfg.SOLVER.BATCH_SIZE
             do_summary = global_step % args.summary_freq == 0
             scalar_outputs_psmnet, img_outputs_psmnet = \
