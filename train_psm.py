@@ -66,11 +66,10 @@ def train(psmnet_model, psmnet_optimizer, TrainImgLoader, ValImgLoader):
 
     for epoch_idx in range(cfg.SOLVER.EPOCHS):
         # One epoch training loop
+        print('epoch: ', epoch_idx)
         avg_train_scalars_psmnet = AverageMeterDict()
         for batch_idx, sample in enumerate(TrainImgLoader):
             global_step = (len(TrainImgLoader) * epoch_idx + batch_idx) * cfg.SOLVER.BATCH_SIZE
-            if global_step > cfg.SOLVER.STEPS:
-                break
 
             # Adjust learning rate
             adjust_learning_rate(psmnet_optimizer, global_step, cfg.SOLVER.LR_CASCADE, cfg.SOLVER.LR_STEPS)
@@ -84,6 +83,7 @@ def train(psmnet_model, psmnet_optimizer, TrainImgLoader, ValImgLoader):
                 scalar_outputs_psmnet = tensor2float(scalar_outputs_psmnet)
                 avg_train_scalars_psmnet.update(scalar_outputs_psmnet)
                 if do_summary:
+                    print('iter: ', batch_idx)
                     # Update PSMNet images
                     save_images(summary_writer, 'train_psmnet', img_outputs_psmnet, global_step)
                     # Update PSMNet losses
@@ -172,7 +172,7 @@ def train_sample(sample, psmnet_model, psmnet_optimizer, isTrain=True):
         del img_disp_r
 
     mask = (disp_gt < cfg.ARGS.MAX_DISP) * (disp_gt > 0)  # Note in training we do not exclude bg
-    print(img_L.shape)
+    #print(img_L.shape)
     if isTrain:
         pred_disp1, pred_disp2, pred_disp3 = psmnet_model(img_L, img_R)
         pred_disp = pred_disp3

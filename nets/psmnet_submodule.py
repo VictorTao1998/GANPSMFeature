@@ -159,7 +159,7 @@ class FeatureExtraction(nn.Module):
             #print('success')
             gan_fea = x
         else:
-            print('success')
+            #print('success')
             gan_fea = self.ganfeature(x)
         # CNN module
         output = self.firstconv(gan_fea)
