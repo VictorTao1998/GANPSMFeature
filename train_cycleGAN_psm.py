@@ -356,8 +356,8 @@ if __name__ == '__main__':
     else:
         psmnet_model = torch.nn.DataParallel(psmnet_model)
 
-    pretrain_dict = torch.load(args.loadmodel)
-    psmnet_model.load_state_dict(pretrain_dict['state_dict'])
+    #pretrain_dict = torch.load(args.loadmodel)
+    #psmnet_model.load_state_dict(pretrain_dict['state_dict'])
 
     feaex = psmnet_model.module.feature_extraction.ganfeature
     psmnet_model.module.feature_extraction.gan_train = False
