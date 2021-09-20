@@ -29,7 +29,7 @@ parser.add_argument('--logdir', required=True, help='Directory to save logs and 
 parser.add_argument('--seed', type=int, default=1, metavar='S', help='Random seed (default: 1)')
 parser.add_argument("--local_rank", type=int, default=0, help='Rank of device in distributed training')
 parser.add_argument('--debug', action='store_true', help='Whether run in debug mode (will load less data)')
-parser.add_argument('--warp-op', action='store_true',default=True, help='whether use warp_op function to get disparity')
+parser.add_argument('--warp_op', action='store_true',default=True, help='whether use warp_op function to get disparity')
 
 args = parser.parse_args()
 cfg.merge_from_file(args.config_file)
@@ -69,6 +69,8 @@ def train(psmnet_model, psmnet_optimizer, TrainImgLoader, ValImgLoader):
         print('epoch: ', epoch_idx)
         avg_train_scalars_psmnet = AverageMeterDict()
         for batch_idx, sample in enumerate(TrainImgLoader):
+            if batch_idx > 5:
+                break
             global_step = (len(TrainImgLoader) * epoch_idx + batch_idx) * cfg.SOLVER.BATCH_SIZE
 
             # Adjust learning rate
@@ -205,6 +207,8 @@ def train_sample(sample, psmnet_model, psmnet_optimizer, isTrain=True):
     pred_disp_err_np = disp_error_img(pred_disp[[0]], disp_gt[[0]], mask[[0]])
     pred_disp_err_tensor = torch.from_numpy(np.ascontiguousarray(pred_disp_err_np[None].transpose([0, 3, 1, 2])))
     img_outputs_psmnet = {
+        'img_L': img_L,
+        'img_R': img_R,
         'disp_gt': disp_gt[[0]].repeat([1, 3, 1, 1]),
         'disp_pred': pred_disp[[0]].repeat([1, 3, 1, 1]),
         'disp_err': pred_disp_err_tensor
@@ -217,8 +221,8 @@ def train_sample(sample, psmnet_model, psmnet_optimizer, isTrain=True):
 
 if __name__ == '__main__':
     # Obtain dataloader
-    train_dataset = MessytableDataset(cfg.SPLIT.TRAIN, debug=args.debug, sub=600)
-    val_dataset = MessytableDataset(cfg.SPLIT.VAL, debug=args.debug, sub=100)
+    train_dataset = MessytableDataset(cfg.SPLIT.TRAIN, gaussian_blur=True, color_jitter=True, debug=args.debug, sub=600)
+    val_dataset = MessytableDataset(cfg.SPLIT.VAL, gaussian_blur=False, color_jitter=False, debug=args.debug, sub=100)
     if is_distributed:
         train_sampler = torch.utils.data.DistributedSampler(train_dataset, num_replicas=dist.get_world_size(),
                                                             rank=dist.get_rank())

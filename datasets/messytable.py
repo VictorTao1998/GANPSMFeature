@@ -88,9 +88,7 @@ class MessytableDataset(Dataset):
             If you want to change the parameters of each augmentation, you need to go to config files,
             e.g. configs/remote_train_config.yaml
         """
-        transform_list = [
-            Transforms.ToTensor()
-        ]
+        transform_list = []
         if gaussian_blur:
             gaussian_sig = random.uniform(cfg.DATA_AUG.GAUSSIAN_MIN, cfg.DATA_AUG.GAUSSIAN_MAX)
             transform_list += [
@@ -104,12 +102,12 @@ class MessytableDataset(Dataset):
                                        contrast=[contrast, contrast])
             ]
         # Normalization
-        transform_list += [
-            Transforms.Normalize(
-                mean=[0.485, 0.456, 0.406],
-                std=[0.229, 0.224, 0.225],
-            )
-        ]
+        #transform_list += [
+        #    Transforms.Normalize(
+        #        mean=[0.485, 0.456, 0.406],
+        #        std=[0.229, 0.224, 0.225],
+        #    )
+        #]
         custom_augmentation = Transforms.Compose(transform_list)
         return custom_augmentation
 
@@ -117,7 +115,10 @@ class MessytableDataset(Dataset):
         return len(self.img_L)
 
     def __getitem__(self, idx):
-        #process = self.__data_augmentation__()
+        needaug = False
+        if self.gaussian_blur or self.color_jitter:
+            needaug = True
+            process = self.__data_augmentation__(self.gaussian_blur, self.color_jitter)
         #print(self.img_L, np.array(Image.open(self.img_L[idx]).convert('RGB')).shape)
         #print(np.array(Image.open(self.img_L[idx])).shape, np.array(Image.open(self.img_L[idx]).convert('RGB')).shape, np.array(Image.open(self.img_L[idx]).convert('RGB').resize((540,960))).shape)
         #print(np.array(Image.open(self.img_L[idx])).shape)  
@@ -173,8 +174,10 @@ class MessytableDataset(Dataset):
         
 
         item = {}
-        item['img_L'] = torch.tensor(img_L_rgb, dtype=torch.float32).permute(2, 0, 1)  # [bs, 1, H, W]
-        item['img_R'] = torch.tensor(img_R_rgb, dtype=torch.float32).permute(2, 0, 1)  # [bs, 1, H, W]
+        imgL = torch.tensor(img_L_rgb, dtype=torch.float32).permute(2, 0, 1)
+        imgR = torch.tensor(img_L_rgb, dtype=torch.float32).permute(2, 0, 1)
+        item['img_L'] = process(imgL) if needaug else imgL  # [bs, 1, H, W]
+        item['img_R'] = process(imgR) if needaug else imgR  # [bs, 1, H, W]
         item['img_sim'] = torch.tensor(img_sim_rgb, dtype=torch.float32).permute(2, 0, 1)  # [bs, 3, 2*H, 2*W]
         item['img_disp_l'] = torch.tensor(img_disp_l, dtype=torch.float32).unsqueeze(0)  # [bs, 1, H, W] in dataloader
         item['img_depth_l'] = torch.tensor(img_depth_l, dtype=torch.float32).unsqueeze(0)  # [bs, 1, H, W]
