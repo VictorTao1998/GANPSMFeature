@@ -91,6 +91,7 @@ def train(psmnet_model, psmnet_optimizer, TrainImgLoader, ValImgLoader):
                     save_scalars(summary_writer, 'train_psmnet', scalar_outputs_psmnet, global_step)
 
                 # Save checkpoints
+                """
                 if (global_step + 1) % args.save_freq == 0:
                     checkpoint_data = {
                         'epoch': epoch_idx,
@@ -104,6 +105,7 @@ def train(psmnet_model, psmnet_optimizer, TrainImgLoader, ValImgLoader):
                     total_err_metric_psmnet = avg_train_scalars_psmnet.mean()
                     avg_train_scalars_psmnet = AverageMeterDict()
                     logger.info(f'Step {global_step} train psmnet: {total_err_metric_psmnet}')
+                """
         gc.collect()
 
 
