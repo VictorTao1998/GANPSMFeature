@@ -175,7 +175,7 @@ class MessytableDataset(Dataset):
 
         item = {}
         imgL = torch.tensor(img_L_rgb, dtype=torch.float32).permute(2, 0, 1)
-        imgR = torch.tensor(img_L_rgb, dtype=torch.float32).permute(2, 0, 1)
+        imgR = torch.tensor(img_R_rgb, dtype=torch.float32).permute(2, 0, 1)
         item['img_L'] = process(imgL) if needaug else imgL  # [bs, 1, H, W]
         item['img_R'] = process(imgR) if needaug else imgR  # [bs, 1, H, W]
         item['img_sim'] = torch.tensor(img_sim_rgb, dtype=torch.float32).permute(2, 0, 1)  # [bs, 3, 2*H, 2*W]
