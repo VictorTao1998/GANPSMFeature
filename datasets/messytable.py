@@ -88,7 +88,9 @@ class MessytableDataset(Dataset):
             If you want to change the parameters of each augmentation, you need to go to config files,
             e.g. configs/remote_train_config.yaml
         """
-        transform_list = []
+        transform_list = [
+            Transforms.ToTensor()
+        ]
         if gaussian_blur:
             gaussian_sig = random.uniform(cfg.DATA_AUG.GAUSSIAN_MIN, cfg.DATA_AUG.GAUSSIAN_MAX)
             transform_list += [
@@ -102,12 +104,12 @@ class MessytableDataset(Dataset):
                                        contrast=[contrast, contrast])
             ]
         # Normalization
-        #transform_list += [
-        #    Transforms.Normalize(
-        #        mean=[0.485, 0.456, 0.406],
-        #        std=[0.229, 0.224, 0.225],
-        #    )
-        #]
+        transform_list += [
+            Transforms.Normalize(
+                mean=[0.485, 0.456, 0.406],
+                std=[0.229, 0.224, 0.225],
+            )
+        ]
         custom_augmentation = Transforms.Compose(transform_list)
         return custom_augmentation
 
@@ -115,15 +117,12 @@ class MessytableDataset(Dataset):
         return len(self.img_L)
 
     def __getitem__(self, idx):
-        needaug = False
-        if self.gaussian_blur or self.color_jitter:
-            needaug = True
-            process = self.__data_augmentation__(self.gaussian_blur, self.color_jitter)
+        process = self.__data_augmentation__(self.gaussian_blur, self.color_jitter)
         #print(self.img_L, np.array(Image.open(self.img_L[idx]).convert('RGB')).shape)
         #print(np.array(Image.open(self.img_L[idx])).shape, np.array(Image.open(self.img_L[idx]).convert('RGB')).shape, np.array(Image.open(self.img_L[idx]).convert('RGB').resize((540,960))).shape)
         #print(np.array(Image.open(self.img_L[idx])).shape)  
-        img_L_rgb = (np.array(Image.open(self.img_L[idx]))[:, :, :3] - 127.5) / 127.5   # [H, W, 1], in (0, 1)
-        img_R_rgb = (np.array(Image.open(self.img_R[idx]))[:, :, :3] - 127.5) / 127.5
+        img_L_rgb = Image.open(self.img_L[idx]).convert('RGB')   # [H, W, 1], in (0, 1)
+        img_R_rgb = Image.open(self.img_R[idx]).convert('RGB')
         L_a = np.array(img_L_rgb)
         R_a = np.array(img_R_rgb)
         #print(L_a[0,0,1]==R_a[0,0,4])
@@ -136,7 +135,7 @@ class MessytableDataset(Dataset):
 
         # For unpaired pix2pix, load a random real image from real dataset [H, W, 1], in value range (-1, 1)
         #print(np.array(Image.open(random.choice(self.img_sim)).convert('RGB')).shape)
-        img_sim_rgb = (np.array(Image.open(random.choice(self.img_sim)).convert('RGB'))[:, :, :3] - 127.5) / 127.5
+        img_sim_rgb = Image.open(random.choice(self.img_sim)).convert('RGB')
         #print(img_sim_rgb.shape)
 
         #img_L_rgb, img_R_rgb, img_sim_rgb = process(img_L_rgb), process(img_R_rgb), process(img_sim_rgb)
@@ -156,7 +155,10 @@ class MessytableDataset(Dataset):
         img_disp_r = np.zeros_like(img_depth_r)
         img_disp_r[mask] = focal_length * baseline / img_depth_r[mask]
 
+        img_L_rgb, img_R_rgb, img_sim_rgb = process(img_L_rgb), process(img_R_rgb), process(img_sim_rgb)
+
         # random crop the image to 256 * 512
+        print(img_L_rgb.shape, img_R_rgb.shape, img_sim_rgb.shape)
         h, w = img_L_rgb.shape[:2]
         th, tw = cfg.ARGS.CROP_HEIGHT, cfg.ARGS.CROP_WIDTH
         x = random.randint(0, h - th)
