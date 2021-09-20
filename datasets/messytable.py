@@ -159,17 +159,17 @@ class MessytableDataset(Dataset):
 
         # random crop the image to 256 * 512
         print(img_L_rgb.shape, img_R_rgb.shape, img_sim_rgb.shape)
-        h, w = img_L_rgb.shape[:2]
+        h, w = img_L_rgb.shape[1:]
         th, tw = cfg.ARGS.CROP_HEIGHT, cfg.ARGS.CROP_WIDTH
         x = random.randint(0, h - th)
         y = random.randint(0, w - tw)
-        img_L_rgb = img_L_rgb[x:(x+th), y:(y+tw)]
-        img_R_rgb = img_R_rgb[x:(x+th), y:(y+tw)]
+        img_L_rgb = img_L_rgb[:,x:(x+th), y:(y+tw)]
+        img_R_rgb = img_R_rgb[:,x:(x+th), y:(y+tw)]
         img_disp_l = img_disp_l[2*x: 2*(x+th), 2*y: 2*(y+tw)]  # depth original res in 1080*1920
         img_depth_l = img_depth_l[2*x: 2*(x+th), 2*y: 2*(y+tw)]
         img_disp_r = img_disp_r[2*x: 2*(x+th), 2*y: 2*(y+tw)]
         img_depth_r = img_depth_r[2*x: 2*(x+th), 2*y: 2*(y+tw)]
-        img_sim_rgb = img_sim_rgb[2*x: 2*(x+th), 2*y: 2*(y+tw)]  # real original res in 1080*1920
+        img_sim_rgb = img_sim_rgb[:,2*x: 2*(x+th), 2*y: 2*(y+tw)]  # real original res in 1080*1920
 
         #img_L_rgb, img_R_rgb, img_sim_rgb = process(img_L_rgb), process(img_R_rgb), process(img_sim_rgb)
 
