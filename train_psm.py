@@ -114,6 +114,8 @@ def train(psmnet_model, psmnet_optimizer, TrainImgLoader, ValImgLoader):
         # One epoch validation loop
         avg_val_scalars_psmnet = AverageMeterDict()
         for batch_idx, sample in enumerate(ValImgLoader):
+            if batch_idx > 5:
+                break
             global_step = (len(ValImgLoader) * epoch_idx + batch_idx) * cfg.SOLVER.BATCH_SIZE
             do_summary = global_step % args.summary_freq == 0
             scalar_outputs_psmnet, img_outputs_psmnet = \
@@ -122,6 +124,7 @@ def train(psmnet_model, psmnet_optimizer, TrainImgLoader, ValImgLoader):
                 scalar_outputs_psmnet = tensor2float(scalar_outputs_psmnet)
                 avg_val_scalars_psmnet.update(scalar_outputs_psmnet)
                 if do_summary:
+                    print('val: ', batch_idx)
                     # Update PSMNet images
                     save_images(summary_writer, 'val_psmnet', img_outputs_psmnet, global_step)
                     # Update Cascade losses
