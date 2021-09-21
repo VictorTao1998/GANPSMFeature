@@ -68,8 +68,8 @@ def train(psmnet_model, psmnet_optimizer, TrainImgLoader, ValImgLoader):
         # One epoch validation loop
     avg_val_scalars_psmnet = AverageMeterDict()
     for batch_idx, sample in enumerate(ValImgLoader):
-        global_step = (len(ValImgLoader) * epoch_idx + batch_idx) * cfg.SOLVER.BATCH_SIZE
-        do_summary = global_step % args.summary_freq == 0
+        #global_step = (len(ValImgLoader) * epoch_idx + batch_idx) * cfg.SOLVER.BATCH_SIZE
+        do_summary = batch_idx % args.summary_freq == 0
         scalar_outputs_psmnet, img_outputs_psmnet = \
             train_sample(sample, psmnet_model, psmnet_optimizer, isTrain=False)
         if (not is_distributed) or (dist.get_rank() == 0):
