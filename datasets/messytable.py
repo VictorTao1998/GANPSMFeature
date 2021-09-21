@@ -104,12 +104,12 @@ class MessytableDataset(Dataset):
                                        contrast=[contrast, contrast])
             ]
         # Normalization
-        transform_list += [
-            Transforms.Normalize(
-                mean=[0.485, 0.456, 0.406],
-                std=[0.229, 0.224, 0.225],
-            )
-        ]
+        #transform_list += [
+        #    Transforms.Normalize(
+        #        mean=[0.485, 0.456, 0.406],
+        #        std=[0.229, 0.224, 0.225],
+        #    )
+        #]
         custom_augmentation = Transforms.Compose(transform_list)
         return custom_augmentation
 
@@ -156,7 +156,9 @@ class MessytableDataset(Dataset):
         img_disp_r[mask] = focal_length * baseline / img_depth_r[mask]
 
         img_L_rgb, img_R_rgb, img_sim_rgb = process(img_L_rgb), process(img_R_rgb), process(img_sim_rgb)
-
+        img_L_rgb = (img_L_rgb - 0.5) / 0.5
+        img_R_rgb = (img_R_rgb - 0.5) / 0.5
+        img_sim_rgb = (img_sim_rgb - 0.5) / 0.5
         # random crop the image to 256 * 512
         #print(img_L_rgb.shape, img_R_rgb.shape, img_sim_rgb.shape)
         h, w = img_L_rgb.shape[1:]
