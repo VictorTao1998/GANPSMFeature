@@ -161,7 +161,7 @@ class MessytableDataset(Dataset):
         img_R_rgb = (img_R_rgb - 0.5) / 0.5
         img_sim_rgb = (img_sim_rgb - 0.5) / 0.5
         # random crop the image to 256 * 512
-        #print(img_L_rgb.shape, img_R_rgb.shape, img_sim_rgb.shape)
+        print(img_L_rgb.shape, img_R_rgb.shape, img_sim_rgb.shape)
         h, w = img_L_rgb.shape[1:]
         th, tw = cfg.ARGS.CROP_HEIGHT, cfg.ARGS.CROP_WIDTH
         x = random.randint(0, h - th)
