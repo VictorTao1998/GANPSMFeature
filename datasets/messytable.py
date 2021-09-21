@@ -162,11 +162,11 @@ class MessytableDataset(Dataset):
         img_sim_rgb = (img_sim_rgb - 0.5) / 0.5
         # random crop the image to 256 * 512
         #print(img_L_rgb.shape, img_R_rgb.shape, img_sim_rgb.shape)
-        h, w = img_L_rgb.shape[1:]
+        h, w = 540, 960
         th, tw = cfg.ARGS.CROP_HEIGHT, cfg.ARGS.CROP_WIDTH
         x = random.randint(0, h - th)
         y = random.randint(0, w - tw)
-        print(img_L_rgb.shape, img_R_rgb.shape, img_sim_rgb.shape, img_disp_l.shape, h, w, th, tw, x, y)
+        #print(img_L_rgb.shape, img_R_rgb.shape, img_sim_rgb.shape, img_disp_l.shape, h, w, th, tw, x, y)
         if self.real:
             img_L_rgb = img_L_rgb[:,2*x: 2*(x+th), 2*y: 2*(y+tw)]
             img_R_rgb = img_R_rgb[:,2*x: 2*(x+th), 2*y: 2*(y+tw)]
