@@ -200,8 +200,8 @@ def train_sample(sample, gan_model, psmnet_model, feaex, isTrain=True):
     img_R = sample['img_R'].to(cuda_device)  # [bs, 1, H, W]
     img_sim = sample['img_sim'].to(cuda_device)  # [bs, 1, 2H, 2W]
 
-    img_sim = F.interpolate(img_sim, scale_factor=0.5, mode='bilinear',
-                             recompute_scale_factor=False, align_corners=False)
+    #img_sim = F.interpolate(img_sim, scale_factor=0.5, mode='bilinear',
+    #                         recompute_scale_factor=False, align_corners=False)
 
     #print(img_L.shape, img_R.shape, img_sim.shape)
     
