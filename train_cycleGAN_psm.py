@@ -129,6 +129,7 @@ def train(gan_model, psmnet_model, feaex, TrainImgLoader, ValImgLoader):
                     #total_err_metric_psmnet = avg_train_scalars_psmnet.mean()
                     logger.info(f'Step {global_step} train gan    : {total_err_metric_gan}')
                     #logger.info(f'Step {global_step} train cascade: {total_err_metric_psmnet}')
+            del scalar_outputs_gan, img_outputs_gan, img_outputs_psmnet
         gc.collect()
         """
         # One epoch validation loop
