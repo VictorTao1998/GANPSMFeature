@@ -79,8 +79,7 @@ def train(gan_model, psmnet_model, feaex, TrainImgLoader, ValImgLoader):
         for batch_idx, sample in enumerate(TrainImgLoader):
             print('iter: ', batch_idx)
             global_step = (len(TrainImgLoader) * epoch_idx + batch_idx) * cfg.SOLVER.BATCH_SIZE
-            if global_step > cfg.SOLVER.STEPS:
-                break
+
 
             # Adjust learning rate
             adjust_learning_rate(gan_model.optimizer_G, global_step, cfg.SOLVER.LR_G, cfg.SOLVER.LR_STEPS)
