@@ -206,13 +206,13 @@ def train_sample(sample, gan_model, psmnet_model, feaex, isTrain=True):
 
     #print(img_L.shape, img_R.shape, img_sim.shape)
     
-    #img_L = F.interpolate(img_L, scale_factor=0.5, mode='bilinear',
-    #                         recompute_scale_factor=False, align_corners=False)
-    #img_R = F.interpolate(img_R, scale_factor=0.5, mode='bilinear',
-    #                         recompute_scale_factor=False, align_corners=False)
+    img_L = F.interpolate(img_L, scale_factor=0.5, mode='bilinear',
+                             recompute_scale_factor=False, align_corners=False)
+    img_R = F.interpolate(img_R, scale_factor=0.5, mode='bilinear',
+                             recompute_scale_factor=False, align_corners=False)
 
     #print(img_L.shape, img_R.shape, img_sim.shape)
-    fea_L_f, fea_R_f, fea_sim_f = img_L, img_R, img_sim #feaex(img_L).detach(), feaex(img_R).detach(), feaex(img_sim).detach()
+    fea_L_f, fea_R_f, fea_sim_f = feaex(img_L).detach(), feaex(img_R).detach(), feaex(img_sim).detach()
     #print(fea_L_f[0,0,0,0] == fea_L_f[0,1,0,0])
     fea_L = fea_L_f[:,0,:,:].reshape((fea_L_f.shape[0], 1, fea_L_f.shape[2], fea_L_f.shape[3]))
     fea_R = fea_R_f[:,0,:,:].reshape((fea_R_f.shape[0], 1, fea_R_f.shape[2], fea_R_f.shape[3]))
@@ -243,8 +243,8 @@ def train_sample(sample, gan_model, psmnet_model, feaex, isTrain=True):
 
     if args.warp_op:
         img_disp_r = sample['img_disp_r'].to(cuda_device)
-        #img_disp_r = F.interpolate(img_disp_r, scale_factor=0.5, mode='nearest',
-        #                           recompute_scale_factor=False)
+        img_disp_r = F.interpolate(img_disp_r, scale_factor=0.5, mode='nearest',
+                                   recompute_scale_factor=False)
         disp_gt = apply_disparity_cu(img_disp_r, img_disp_r.type(torch.int))  # [bs, 1, H, W]
         del img_disp_r
 
@@ -252,13 +252,13 @@ def train_sample(sample, gan_model, psmnet_model, feaex, isTrain=True):
     if isTrain:
         pred_disp3 = psmnet_model(fea_L_f, fea_R_f)
         pred_disp = pred_disp3
-        #loss_psmnet = 0.5 * F.smooth_l1_loss(pred_disp1[mask], disp_gt[mask], reduction='mean') \
-        #       + 0.7 * F.smooth_l1_loss(pred_disp2[mask], disp_gt[mask], reduction='mean') \
-        #       + F.smooth_l1_loss(pred_disp3[mask], disp_gt[mask], reduction='mean')
+        loss_psmnet = 0.5 * F.smooth_l1_loss(pred_disp1[mask], disp_gt[mask], reduction='mean') \
+               + 0.7 * F.smooth_l1_loss(pred_disp2[mask], disp_gt[mask], reduction='mean') \
+               + F.smooth_l1_loss(pred_disp3[mask], disp_gt[mask], reduction='mean')
     else:
         with torch.no_grad():
             pred_disp = psmnet_model(fea_L_f, fea_R_f)
-            #loss_psmnet = F.smooth_l1_loss(pred_disp[mask], disp_gt[mask], reduction='mean')
+            loss_psmnet = F.smooth_l1_loss(pred_disp[mask], disp_gt[mask], reduction='mean')
 
     # Backward and optimization
     if isTrain:
@@ -269,10 +269,10 @@ def train_sample(sample, gan_model, psmnet_model, feaex, isTrain=True):
         # Ds require no gradient when optimizing Gs
         gan_model.set_requires_grad([gan_model.netD_A, gan_model.netD_B], False)
         gan_model.optimizer_G.zero_grad()   # set Gs' gradient to zero
-        #psmnet_optimizer.zero_grad()           # set cascade gradient to zero
+        psmnet_optimizer.zero_grad()           # set cascade gradient to zero
         total_loss.backward()                   # calculate gradient
         gan_model.optimizer_G.step()            # update Gs weights
-        #psmnet_optimizer.step()                # update cascade weights
+        psmnet_optimizer.step()                # update cascade weights
     else:
         gan_model.compute_loss_G()
         gan_model.compute_loss_D_A()
@@ -298,32 +298,32 @@ def train_sample(sample, gan_model, psmnet_model, feaex, isTrain=True):
     }
 
     # Compute cascade error metrics
-    #scalar_outputs_psmnet = {'loss': loss_psmnet.item()}
-    #err_metrics = compute_err_metric(disp_gt,
-    #                                 depth_gt,
-    #                                 pred_disp,
-    #                                 img_focal_length,
-    #                                 img_baseline,
-    #                                 mask)
-    #scalar_outputs_psmnet.update(err_metrics)
+    scalar_outputs_psmnet = {'loss': loss_psmnet.item()}
+    err_metrics = compute_err_metric(disp_gt,
+                                     depth_gt,
+                                     pred_disp,
+                                     img_focal_length,
+                                     img_baseline,
+                                     mask)
+    scalar_outputs_psmnet.update(err_metrics)
     # Compute error images
-    #pred_disp_err_np = disp_error_img(pred_disp[[0]], disp_gt[[0]], mask[[0]])
-    #pred_disp_err_tensor = torch.from_numpy(np.ascontiguousarray(pred_disp_err_np[None].transpose([0, 3, 1, 2])))
+    pred_disp_err_np = disp_error_img(pred_disp[[0]], disp_gt[[0]], mask[[0]])
+    pred_disp_err_tensor = torch.from_numpy(np.ascontiguousarray(pred_disp_err_np[None].transpose([0, 3, 1, 2])))
     img_outputs_psmnet = {
         'disp_gt': disp_gt[[0]].repeat([1, 3, 1, 1])
-        #'disp_pred': pred_disp[[0]].repeat([1, 3, 1, 1]),
-        #'disp_err': pred_disp_err_tensor
+        'disp_pred': pred_disp[[0]].repeat([1, 3, 1, 1]),
+        'disp_err': pred_disp_err_tensor
     }
 
     if is_distributed:
         scalar_outputs_gan = reduce_scalar_outputs(scalar_outputs_gan, cuda_device)
-        #scalar_outputs_psmnet = reduce_scalar_outputs(scalar_outputs_psmnet, cuda_device)
-    return scalar_outputs_gan, img_outputs_gan, img_outputs_psmnet
+        scalar_outputs_psmnet = reduce_scalar_outputs(scalar_outputs_psmnet, cuda_device)
+    return scalar_outputs_gan, img_outputs_gan, img_outputs_psmnet, scalar_outputs_psmnet
 
 
 if __name__ == '__main__':
     # Obtain dataloader
-    train_dataset = MessytableDataset(cfg.SPLIT.TRAIN, debug=args.debug, sub=600, isReal=False)
+    train_dataset = MessytableDataset(cfg.REAL.TRAIN, debug=args.debug, sub=600, isReal=True)
     val_dataset = MessytableDataset(cfg.SPLIT.VAL, debug=args.debug, sub=100, isReal=False)
     if is_distributed:
         train_sampler = torch.utils.data.DistributedSampler(train_dataset, num_replicas=dist.get_world_size(),
@@ -356,8 +356,8 @@ if __name__ == '__main__':
     else:
         psmnet_model = torch.nn.DataParallel(psmnet_model)
 
-    #pretrain_dict = torch.load(args.loadmodel)
-    #psmnet_model.load_state_dict(pretrain_dict['state_dict'])
+    pretrain_dict = torch.load(args.loadmodel)
+    psmnet_model.load_state_dict(pretrain_dict['PSMNet'])
 
     feaex = psmnet_model.module.feature_extraction.ganfeature
     psmnet_model.module.feature_extraction.gan_train = False

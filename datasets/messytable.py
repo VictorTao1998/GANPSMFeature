@@ -69,11 +69,11 @@ class MessytableDataset(Dataset):
 
         # If training with pix2pix + cascade, load real dataset as input to the discriminator
         if isTest is False:
-            img_real_list = cfg.REAL.TRAIN
+            img_real_list = cfg.SPLIT.TRAIN
             with open(img_real_list, 'r') as f:
                 prefix = [line.strip() for line in f]
-                img_sim_L = [os.path.join(cfg.REAL.DATASET, p, cfg.REAL.LEFT) for p in prefix]
-                img_sim_R = [os.path.join(cfg.REAL.DATASET, p, cfg.REAL.RIGHT) for p in prefix]
+                img_sim_L = [os.path.join(cfg.DIR.DATASET, p, cfg.SPLIT.LEFT) for p in prefix]
+                img_sim_R = [os.path.join(cfg.DIR.DATASET, p, cfg.SPLIT.RIGHT) for p in prefix]
                 img_sim = img_sim_L + img_sim_R
             np.random.shuffle(img_sim)
             return img_L, img_R, img_depth_l, img_depth_r, img_meta, img_sim
@@ -177,7 +177,7 @@ class MessytableDataset(Dataset):
         img_depth_l = img_depth_l[2*x: 2*(x+th), 2*y: 2*(y+tw)]
         img_disp_r = img_disp_r[2*x: 2*(x+th), 2*y: 2*(y+tw)]
         img_depth_r = img_depth_r[2*x: 2*(x+th), 2*y: 2*(y+tw)]
-        img_sim_rgb = img_sim_rgb[:,2*x: 2*(x+th), 2*y: 2*(y+tw)]  # real original res in 1080*1920
+        img_sim_rgb = img_sim_rgb[:,x: (x+th), y: (y+tw)]  # real original res in 1080*1920
 
         #img_L_rgb, img_R_rgb, img_sim_rgb = process(img_L_rgb), process(img_R_rgb), process(img_sim_rgb)
         #print(img_L_rgb.shape, img_R_rgb.shape, img_disp_l.shape, img_depth_l.shape, img_sim_rgb.shape)
