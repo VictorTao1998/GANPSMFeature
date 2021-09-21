@@ -252,9 +252,9 @@ def train_sample(sample, gan_model, psmnet_model, feaex, isTrain=True):
     if isTrain:
         pred_disp3 = psmnet_model(fea_L_f, fea_R_f)
         pred_disp = pred_disp3
-        loss_psmnet = 0.5 * F.smooth_l1_loss(pred_disp1[mask], disp_gt[mask], reduction='mean') \
-               + 0.7 * F.smooth_l1_loss(pred_disp2[mask], disp_gt[mask], reduction='mean') \
-               + F.smooth_l1_loss(pred_disp3[mask], disp_gt[mask], reduction='mean')
+        #loss_psmnet = 0.5 * F.smooth_l1_loss(pred_disp1[mask], disp_gt[mask], reduction='mean') \
+        #       + 0.7 * F.smooth_l1_loss(pred_disp2[mask], disp_gt[mask], reduction='mean') \
+        #       + F.smooth_l1_loss(pred_disp3[mask], disp_gt[mask], reduction='mean')
     else:
         with torch.no_grad():
             pred_disp = psmnet_model(fea_L_f, fea_R_f)
@@ -269,10 +269,10 @@ def train_sample(sample, gan_model, psmnet_model, feaex, isTrain=True):
         # Ds require no gradient when optimizing Gs
         gan_model.set_requires_grad([gan_model.netD_A, gan_model.netD_B], False)
         gan_model.optimizer_G.zero_grad()   # set Gs' gradient to zero
-        psmnet_optimizer.zero_grad()           # set cascade gradient to zero
+        #psmnet_optimizer.zero_grad()           # set cascade gradient to zero
         total_loss.backward()                   # calculate gradient
         gan_model.optimizer_G.step()            # update Gs weights
-        psmnet_optimizer.step()                # update cascade weights
+        #psmnet_optimizer.step()                # update cascade weights
     else:
         gan_model.compute_loss_G()
         gan_model.compute_loss_D_A()
