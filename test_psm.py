@@ -78,10 +78,10 @@ def train(psmnet_model, psmnet_optimizer, TrainImgLoader, ValImgLoader):
             if do_summary:
                 print('val: ', batch_idx)
                 # Update PSMNet images
-                save_images(summary_writer, 'test_psmnet', img_outputs_psmnet, global_step)
+                save_images(summary_writer, 'test_psmnet', img_outputs_psmnet, batch_idx)
                 # Update Cascade losses
                 scalar_outputs_psmnet.update({'lr': psmnet_optimizer.param_groups[0]['lr']})
-                save_scalars(summary_writer, 'test_psmnet', scalar_outputs_psmnet, global_step)
+                save_scalars(summary_writer, 'test_psmnet', scalar_outputs_psmnet, batch_idx)
 
     gc.collect()
 
