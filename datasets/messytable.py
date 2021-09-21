@@ -166,7 +166,7 @@ class MessytableDataset(Dataset):
         th, tw = cfg.ARGS.CROP_HEIGHT, cfg.ARGS.CROP_WIDTH
         x = random.randint(0, h - th)
         y = random.randint(0, w - tw)
-
+        print(img_L_rgb.shape, img_R_rgb.shape, img_sim_rgb.shape, img_disp_l.shape, h, w, th, tw, x, y)
         if self.real:
             img_L_rgb = img_L_rgb[:,2*x: 2*(x+th), 2*y: 2*(y+tw)]
             img_R_rgb = img_R_rgb[:,2*x: 2*(x+th), 2*y: 2*(y+tw)]
@@ -180,7 +180,7 @@ class MessytableDataset(Dataset):
         img_sim_rgb = img_sim_rgb[:,2*x: 2*(x+th), 2*y: 2*(y+tw)]  # real original res in 1080*1920
 
         #img_L_rgb, img_R_rgb, img_sim_rgb = process(img_L_rgb), process(img_R_rgb), process(img_sim_rgb)
-        print(img_L_rgb.shape, img_R_rgb.shape, img_disp_l.shape, img_depth_l.shape, img_sim_rgb.shape)
+        #print(img_L_rgb.shape, img_R_rgb.shape, img_disp_l.shape, img_depth_l.shape, img_sim_rgb.shape)
         
 
         item = {}
