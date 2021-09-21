@@ -298,14 +298,14 @@ def train_sample(sample, gan_model, psmnet_model, feaex, isTrain=True):
     }
 
     # Compute cascade error metrics
-    scalar_outputs_psmnet = {'loss': loss_psmnet.item()}
-    err_metrics = compute_err_metric(disp_gt,
-                                     depth_gt,
-                                     pred_disp,
-                                     img_focal_length,
-                                     img_baseline,
-                                     mask)
-    scalar_outputs_psmnet.update(err_metrics)
+    #scalar_outputs_psmnet = {'loss': loss_psmnet.item()}
+    #err_metrics = compute_err_metric(disp_gt,
+    #                                 depth_gt,
+    #                                 pred_disp,
+    #                                 img_focal_length,
+    #                                 img_baseline,
+    #                                 mask)
+    #scalar_outputs_psmnet.update(err_metrics)
     # Compute error images
     pred_disp_err_np = disp_error_img(pred_disp[[0]], disp_gt[[0]], mask[[0]])
     pred_disp_err_tensor = torch.from_numpy(np.ascontiguousarray(pred_disp_err_np[None].transpose([0, 3, 1, 2])))
@@ -317,8 +317,8 @@ def train_sample(sample, gan_model, psmnet_model, feaex, isTrain=True):
 
     if is_distributed:
         scalar_outputs_gan = reduce_scalar_outputs(scalar_outputs_gan, cuda_device)
-        scalar_outputs_psmnet = reduce_scalar_outputs(scalar_outputs_psmnet, cuda_device)
-    return scalar_outputs_gan, img_outputs_gan, img_outputs_psmnet, scalar_outputs_psmnet
+        #scalar_outputs_psmnet = reduce_scalar_outputs(scalar_outputs_psmnet, cuda_device)
+    return scalar_outputs_gan, img_outputs_gan, img_outputs_psmnet#, scalar_outputs_psmnet
 
 
 if __name__ == '__main__':
