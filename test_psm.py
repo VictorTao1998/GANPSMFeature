@@ -188,8 +188,8 @@ if __name__ == '__main__':
         psmnet_model = torch.nn.DataParallel(psmnet_model)
 
     pretrain_dict = torch.load(args.loadmodel)
-    print(pretrain_dict.keys())
-    psmnet_model.load_state_dict(pretrain_dict)
+    #print(pretrain_dict.keys())
+    psmnet_model.load_state_dict(pretrain_dict['PSMNet'])
 
 
     # Start training
