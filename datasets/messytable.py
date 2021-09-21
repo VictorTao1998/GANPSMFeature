@@ -28,6 +28,7 @@ class MessytableDataset(Dataset):
             self.__get_split_files__(split_file, debug, sub, isTest=False, onReal=isReal)
         self.gaussian_blur = gaussian_blur
         self.color_jitter = color_jitter
+        self.real = isReal
 
     @staticmethod
     def __get_split_files__(split_file, debug=False, sub=100, isTest=False, onReal=False):
@@ -165,8 +166,13 @@ class MessytableDataset(Dataset):
         th, tw = cfg.ARGS.CROP_HEIGHT, cfg.ARGS.CROP_WIDTH
         x = random.randint(0, h - th)
         y = random.randint(0, w - tw)
-        img_L_rgb = img_L_rgb[:,x:(x+th), y:(y+tw)]
-        img_R_rgb = img_R_rgb[:,x:(x+th), y:(y+tw)]
+
+        if self.real:
+            img_L_rgb = img_L_rgb[:,2*x: 2*(x+th), 2*y: 2*(y+tw)]
+            img_R_rgb = img_R_rgb[:,2*x: 2*(x+th), 2*y: 2*(y+tw)]
+        else:
+            img_L_rgb = img_L_rgb[:,x:(x+th), y:(y+tw)]
+            img_R_rgb = img_R_rgb[:,x:(x+th), y:(y+tw)]
         img_disp_l = img_disp_l[2*x: 2*(x+th), 2*y: 2*(y+tw)]  # depth original res in 1080*1920
         img_depth_l = img_depth_l[2*x: 2*(x+th), 2*y: 2*(y+tw)]
         img_disp_r = img_disp_r[2*x: 2*(x+th), 2*y: 2*(y+tw)]
