@@ -88,14 +88,14 @@ def train(gan_model, psmnet_model, feaex, TrainImgLoader, ValImgLoader):
 
             do_summary = global_step % args.summary_freq == 0
             # Train one sample
-            scalar_outputs_gan, img_outputs_gan, img_outputs_psmnet = \
+            scalar_outputs_gan, img_outputs_gan, img_outputs_psmnet, scalar_outputs_psmnet = \
                 train_sample(sample, gan_model, psmnet_model, feaex, isTrain=True)
             # Save result to tensorboard
             if (not is_distributed) or (dist.get_rank() == 0):
                 scalar_outputs_gan = tensor2float(scalar_outputs_gan)
-                #scalar_outputs_psmnet = tensor2float(scalar_outputs_psmnet)
+                scalar_outputs_psmnet = tensor2float(scalar_outputs_psmnet)
                 avg_train_scalars_gan.update(scalar_outputs_gan)
-                #avg_train_scalars_psmnet.update(scalar_outputs_psmnet)
+                avg_train_scalars_psmnet.update(scalar_outputs_psmnet)
                 if do_summary:
                     # Update GAN images
                     save_images_grid(summary_writer, 'train_gan', img_outputs_gan, global_step)
@@ -106,8 +106,8 @@ def train(gan_model, psmnet_model, feaex, TrainImgLoader, ValImgLoader):
                     # Update PSMNet images
                     save_images(summary_writer, 'train_psmnet', img_outputs_psmnet, global_step)
                     # Update PSMNet losses
-                    #scalar_outputs_psmnet.update({'lr': psmnet_optimizer.param_groups[0]['lr']})
-                    #save_scalars(summary_writer, 'train_psmnet', scalar_outputs_psmnet, global_step)
+                    scalar_outputs_psmnet.update({'lr': psmnet_optimizer.param_groups[0]['lr']})
+                    save_scalars(summary_writer, 'train_psmnet', scalar_outputs_psmnet, global_step)
 
                 # Save checkpoints
                 if (global_step + 1) % args.save_freq == 0:
@@ -126,10 +126,10 @@ def train(gan_model, psmnet_model, feaex, TrainImgLoader, ValImgLoader):
 
                     # Get average results among all batches
                     total_err_metric_gan = avg_train_scalars_gan.mean()
-                    #total_err_metric_psmnet = avg_train_scalars_psmnet.mean()
+                    total_err_metric_psmnet = avg_train_scalars_psmnet.mean()
                     logger.info(f'Step {global_step} train gan    : {total_err_metric_gan}')
-                    #logger.info(f'Step {global_step} train cascade: {total_err_metric_psmnet}')
-            del scalar_outputs_gan, img_outputs_gan, img_outputs_psmnet
+                    logger.info(f'Step {global_step} train cascade: {total_err_metric_psmnet}')
+            del scalar_outputs_gan, img_outputs_gan, img_outputs_psmnet, scalar_outputs_psmnet
         gc.collect()
         """
         # One epoch validation loop
@@ -187,7 +187,7 @@ def train(gan_model, psmnet_model, feaex, TrainImgLoader, ValImgLoader):
 def train_sample(sample, gan_model, psmnet_model, feaex, isTrain=True):
     if isTrain:
         gan_model.train()
-        psmnet_model.eval()
+        psmnet_model.train()
         feaex.eval()
     else:
         gan_model.eval()
@@ -250,11 +250,11 @@ def train_sample(sample, gan_model, psmnet_model, feaex, isTrain=True):
 
     mask = (disp_gt < cfg.ARGS.MAX_DISP) * (disp_gt > 0)  # Note in training we do not exclude bg
     if isTrain:
-        pred_disp3 = psmnet_model(fea_L_f, fea_R_f)
+        pred_disp1, pred_disp2, pred_disp3 = psmnet_model(fake_img_L, fake_img_R)
         pred_disp = pred_disp3
-        #loss_psmnet = 0.5 * F.smooth_l1_loss(pred_disp1[mask], disp_gt[mask], reduction='mean') \
-        #       + 0.7 * F.smooth_l1_loss(pred_disp2[mask], disp_gt[mask], reduction='mean') \
-        #       + F.smooth_l1_loss(pred_disp3[mask], disp_gt[mask], reduction='mean')
+        loss_psmnet = 0.5 * F.smooth_l1_loss(pred_disp1[mask], disp_gt[mask], reduction='mean') \
+               + 0.7 * F.smooth_l1_loss(pred_disp2[mask], disp_gt[mask], reduction='mean') \
+               + F.smooth_l1_loss(pred_disp3[mask], disp_gt[mask], reduction='mean')
     else:
         with torch.no_grad():
             pred_disp = psmnet_model(fea_L_f, fea_R_f)
@@ -265,14 +265,14 @@ def train_sample(sample, gan_model, psmnet_model, feaex, isTrain=True):
         # update Ds
         gan_model.update_D()
         # Update Gs
-        total_loss = gan_model.compute_loss_G()# + loss_psmnet * args.loss_ratio # loss_G + loss_psmnet (task loss)
+        total_loss = gan_model.compute_loss_G() + loss_psmnet * args.loss_ratio # loss_G + loss_psmnet (task loss)
         # Ds require no gradient when optimizing Gs
         gan_model.set_requires_grad([gan_model.netD_A, gan_model.netD_B], False)
         gan_model.optimizer_G.zero_grad()   # set Gs' gradient to zero
-        #psmnet_optimizer.zero_grad()           # set cascade gradient to zero
+        psmnet_optimizer.zero_grad()           # set cascade gradient to zero
         total_loss.backward()                   # calculate gradient
         gan_model.optimizer_G.step()            # update Gs weights
-        #psmnet_optimizer.step()                # update cascade weights
+        psmnet_optimizer.step()                # update cascade weights
     else:
         gan_model.compute_loss_G()
         gan_model.compute_loss_D_A()
@@ -316,14 +316,14 @@ def train_sample(sample, gan_model, psmnet_model, feaex, isTrain=True):
     }
 
     # Compute cascade error metrics
-    #scalar_outputs_psmnet = {'loss': loss_psmnet.item()}
-    #err_metrics = compute_err_metric(disp_gt,
-    #                                 depth_gt,
-    #                                 pred_disp,
-    #                                 img_focal_length,
-    #                                 img_baseline,
-    #                                 mask)
-    #scalar_outputs_psmnet.update(err_metrics)
+    scalar_outputs_psmnet = {'loss': loss_psmnet.item()}
+    err_metrics = compute_err_metric(disp_gt,
+                                     depth_gt,
+                                     pred_disp,
+                                     img_focal_length,
+                                     img_baseline,
+                                     mask)
+    scalar_outputs_psmnet.update(err_metrics)
     # Compute error images
     pred_disp_err_np = disp_error_img(pred_disp[[0]], disp_gt[[0]], mask[[0]])
     pred_disp_err_tensor = torch.from_numpy(np.ascontiguousarray(pred_disp_err_np[None].transpose([0, 3, 1, 2])))
@@ -335,14 +335,14 @@ def train_sample(sample, gan_model, psmnet_model, feaex, isTrain=True):
 
     if is_distributed:
         scalar_outputs_gan = reduce_scalar_outputs(scalar_outputs_gan, cuda_device)
-        #scalar_outputs_psmnet = reduce_scalar_outputs(scalar_outputs_psmnet, cuda_device)
-    return scalar_outputs_gan, img_outputs_gan, img_outputs_psmnet#, scalar_outputs_psmnet
+        scalar_outputs_psmnet = reduce_scalar_outputs(scalar_outputs_psmnet, cuda_device)
+    return scalar_outputs_gan, img_outputs_gan, img_outputs_psmnet, scalar_outputs_psmnet
 
 
 if __name__ == '__main__':
     # Obtain dataloader
     train_dataset = MessytableDataset(cfg.REAL.TRAIN, debug=args.debug, sub=600, isReal=True)
-    val_dataset = MessytableDataset(cfg.SPLIT.VAL, debug=args.debug, sub=100, isReal=False)
+    val_dataset = MessytableDataset(cfg.REAL.TRAIN, debug=args.debug, sub=100, isReal=True)
     if is_distributed:
         train_sampler = torch.utils.data.DistributedSampler(train_dataset, num_replicas=dist.get_world_size(),
                                                             rank=dist.get_rank())
@@ -367,7 +367,7 @@ if __name__ == '__main__':
 
     # Create PSMNet model
     psmnet_model = PSMNet(maxdisp=cfg.ARGS.MAX_DISP).to(cuda_device)
-    #psmnet_optimizer = torch.optim.Adam(psmnet_model.parameters(), lr=cfg.SOLVER.LR_CASCADE, betas=(0.9, 0.999))
+    psmnet_optimizer = torch.optim.Adam(psmnet_model.parameters(), lr=cfg.SOLVER.LR_CASCADE, betas=(0.9, 0.999))
     if is_distributed:
         psmnet_model = torch.nn.parallel.DistributedDataParallel(
             psmnet_model, device_ids=[args.local_rank], output_device=args.local_rank)
