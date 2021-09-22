@@ -75,7 +75,7 @@ def train(gan_model, psmnet_model, feaex, TrainImgLoader, ValImgLoader):
         print('epoch: ', epoch_idx)
         # One epoch training loop
         avg_train_scalars_gan = AverageMeterDict()
-        #avg_train_scalars_psmnet = AverageMeterDict()
+        avg_train_scalars_psmnet = AverageMeterDict()
         for batch_idx, sample in enumerate(TrainImgLoader):
             print('iter: ', batch_idx)
             global_step = (len(TrainImgLoader) * epoch_idx + batch_idx) * cfg.SOLVER.BATCH_SIZE
