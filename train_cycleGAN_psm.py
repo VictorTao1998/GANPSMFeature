@@ -306,10 +306,10 @@ def train_sample(sample, gan_model, psmnet_model, feaex, isTrain=True):
         },
         'img_Sim_0': {
             'input': gan_model.real_B[:,0,:,:], 'fake': gan_model.fake_A[:,0,:,:], 'rec': gan_model.rec_B[:,0,:,:], 'idt': gan_model.idt_A[:,0,:,:]
-        }
+        },
         'img_Sim_1': {
             'input': gan_model.real_B[:,1,:,:], 'fake': gan_model.fake_A[:,1,:,:], 'rec': gan_model.rec_B[:,1,:,:], 'idt': gan_model.idt_A[:,1,:,:]
-        }
+        },
         'img_Sim_2': {
             'input': gan_model.real_B[:,2,:,:], 'fake': gan_model.fake_A[:,2,:,:], 'rec': gan_model.rec_B[:,2,:,:], 'idt': gan_model.idt_A[:,2,:,:]
         }
