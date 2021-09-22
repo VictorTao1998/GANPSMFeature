@@ -287,31 +287,31 @@ def train_sample(sample, gan_model, psmnet_model, feaex, isTrain=True):
     }
     img_outputs_gan = {
         'img_L_0': {
-            'input': gan_model.real_A_L[:,0,:,:], 'fake': gan_model.fake_B_L[:,0,:,:], 'rec': gan_model.rec_A_L[:,0,:,:], 'idt': gan_model.idt_B_L[:,0,:,:]
+            'input': gan_model.real_A_L[:,0,:,:][:,None,:,:], 'fake': gan_model.fake_B_L[:,0,:,:][:,None,:,:], 'rec': gan_model.rec_A_L[:,0,:,:][:,None,:,:], 'idt': gan_model.idt_B_L[:,0,:,:][:,None,:,:]
         },
         'img_L_1': {
-            'input': gan_model.real_A_L[:,1,:,:], 'fake': gan_model.fake_B_L[:,1,:,:], 'rec': gan_model.rec_A_L[:,1,:,:], 'idt': gan_model.idt_B_L[:,1,:,:]
+            'input': gan_model.real_A_L[:,1,:,:][:,None,:,:], 'fake': gan_model.fake_B_L[:,1,:,:][:,None,:,:], 'rec': gan_model.rec_A_L[:,1,:,:][:,None,:,:], 'idt': gan_model.idt_B_L[:,1,:,:][:,None,:,:]
         },
         'img_L_2': {
-            'input': gan_model.real_A_L[:,2,:,:], 'fake': gan_model.fake_B_L[:,2,:,:], 'rec': gan_model.rec_A_L[:,2,:,:], 'idt': gan_model.idt_B_L[:,2,:,:]
+            'input': gan_model.real_A_L[:,2,:,:][:,None,:,:], 'fake': gan_model.fake_B_L[:,2,:,:][:,None,:,:], 'rec': gan_model.rec_A_L[:,2,:,:][:,None,:,:], 'idt': gan_model.idt_B_L[:,2,:,:][:,None,:,:]
         },
         'img_R_0': {
-            'input': gan_model.real_A_R[:,0,:,:], 'fake': gan_model.fake_B_R[:,0,:,:], 'rec': gan_model.rec_A_R[:,0,:,:], 'idt': gan_model.idt_B_R[:,0,:,:]
+            'input': gan_model.real_A_R[:,0,:,:][:,None,:,:], 'fake': gan_model.fake_B_R[:,0,:,:][:,None,:,:], 'rec': gan_model.rec_A_R[:,0,:,:][:,None,:,:], 'idt': gan_model.idt_B_R[:,0,:,:][:,None,:,:]
         },
         'img_R_1': {
-            'input': gan_model.real_A_R[:,1,:,:], 'fake': gan_model.fake_B_R[:,1,:,:], 'rec': gan_model.rec_A_R[:,1,:,:], 'idt': gan_model.idt_B_R[:,1,:,:]
+            'input': gan_model.real_A_R[:,1,:,:][:,None,:,:], 'fake': gan_model.fake_B_R[:,1,:,:][:,None,:,:], 'rec': gan_model.rec_A_R[:,1,:,:][:,None,:,:], 'idt': gan_model.idt_B_R[:,1,:,:][:,None,:,:]
         },
         'img_R_2': {
-            'input': gan_model.real_A_R[:,2,:,:], 'fake': gan_model.fake_B_R[:,2,:,:], 'rec': gan_model.rec_A_R[:,2,:,:], 'idt': gan_model.idt_B_R[:,2,:,:]
+            'input': gan_model.real_A_R[:,2,:,:][:,None,:,:], 'fake': gan_model.fake_B_R[:,2,:,:][:,None,:,:], 'rec': gan_model.rec_A_R[:,2,:,:][:,None,:,:], 'idt': gan_model.idt_B_R[:,2,:,:][:,None,:,:]
         },
         'img_Sim_0': {
-            'input': gan_model.real_B[:,0,:,:], 'fake': gan_model.fake_A[:,0,:,:], 'rec': gan_model.rec_B[:,0,:,:], 'idt': gan_model.idt_A[:,0,:,:]
+            'input': gan_model.real_B[:,0,:,:][:,None,:,:], 'fake': gan_model.fake_A[:,0,:,:][:,None,:,:], 'rec': gan_model.rec_B[:,0,:,:][:,None,:,:], 'idt': gan_model.idt_A[:,0,:,:][:,None,:,:]
         },
         'img_Sim_1': {
-            'input': gan_model.real_B[:,1,:,:], 'fake': gan_model.fake_A[:,1,:,:], 'rec': gan_model.rec_B[:,1,:,:], 'idt': gan_model.idt_A[:,1,:,:]
+            'input': gan_model.real_B[:,1,:,:][:,None,:,:], 'fake': gan_model.fake_A[:,1,:,:][:,None,:,:], 'rec': gan_model.rec_B[:,1,:,:][:,None,:,:], 'idt': gan_model.idt_A[:,1,:,:][:,None,:,:]
         },
         'img_Sim_2': {
-            'input': gan_model.real_B[:,2,:,:], 'fake': gan_model.fake_A[:,2,:,:], 'rec': gan_model.rec_B[:,2,:,:], 'idt': gan_model.idt_A[:,2,:,:]
+            'input': gan_model.real_B[:,2,:,:][:,None,:,:], 'fake': gan_model.fake_A[:,2,:,:][:,None,:,:], 'rec': gan_model.rec_B[:,2,:,:][:,None,:,:], 'idt': gan_model.idt_A[:,2,:,:][:,None,:,:]
         }
     }
 
