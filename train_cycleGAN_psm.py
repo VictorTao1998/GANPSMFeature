@@ -229,6 +229,12 @@ def train_sample(sample, gan_model, psmnet_model, feaex, isTrain=True):
     # Train on Cascade
     fake_img_L = gan_model.fake_B_L.to(cuda_device)    # [bs, 1, H, W]
     fake_img_R = gan_model.fake_B_R.to(cuda_device)    # [bs, 1, H, W]
+    range_L_o = torch.max(fea_L_f) -torch.min(fea_L_f)
+    range_R_o = torch.max(fea_R_f) -torch.min(fea_R_f)
+    range_sim_o = torch.max(fea_sim_f) -torch.min(fea_sim_f)
+    range_L_g = torch.max(fake_img_L) -torch.min(fake_img_L)
+    range_R_g = torch.max(fake_img_R) -torch.min(fake_img_R)
+    print('range L before: ', range_L_o, ' range R before: ', range_R_o,  ' range sim before: ', range_sim_o,  ' range L after: ', range_L_g, ' range R after: ', range_R_g)
     disp_gt = sample['img_disp_l'].to(cuda_device)
     depth_gt = sample['img_depth_l'].to(cuda_device)  # [bs, 1, H, W]
     img_focal_length = sample['focal_length'].to(cuda_device)
