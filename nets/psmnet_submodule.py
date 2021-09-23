@@ -80,11 +80,11 @@ class FeatureExtraction(nn.Module):
         self.gan_train = gan_train
         self.inplanes = 32
         # conv0_1, conv0_2, conv0_3
-        self.ganfeature = nn.Conv2d(3, 3, kernel_size=3, stride=1, padding=1, dilation=1, bias=False)
-        #self.ganfeature = nn.Sequential(
-        #    nn.Conv2d(3, 3, kernel_size=3, stride=1, padding=1, dilation=1, bias=False),
-        #    nn.Tanh()
-        #)
+        #self.ganfeature = nn.Conv2d(3, 3, kernel_size=3, stride=1, padding=1, dilation=1, bias=False)
+        self.ganfeature = nn.Sequential(
+            nn.Conv2d(3, 3, kernel_size=3, stride=1, padding=1, dilation=1, bias=False),
+            nn.Tanh()
+        )
         self.firstconv = nn.Sequential(
             convbn(3, 32, 3, 2, 1, 1),
             nn.ReLU(inplace=True),
