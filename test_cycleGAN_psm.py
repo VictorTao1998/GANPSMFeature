@@ -48,6 +48,8 @@ if args.gan_model == '':
 def test(gan_model, psmnet_model, feaex, val_loader, logger, log_dir):
     gan_model.eval()
     psmnet_model.eval()
+    psmnet_model.feature_extraction.gan_train = True
+
     total_err_metrics = {'epe': 0, 'bad1': 0, 'bad2': 0,
                          'depth_abs_err': 0, 'depth_err2': 0, 'depth_err4': 0, 'depth_err8': 0}
     total_obj_disp_err = np.zeros(cfg.SPLIT.OBJ_NUM)
@@ -78,7 +80,7 @@ def test(gan_model, psmnet_model, feaex, val_loader, logger, log_dir):
                              recompute_scale_factor=False)
         img_depth_l = F.interpolate(img_depth_l, (540, 960), mode='nearest',
                              recompute_scale_factor=False)
-        img_depth_realsense = F.interpolate(img_depth_realsense, (540, 960), mode='nearest',
+        #img_depth_realsense = F.interpolate(img_depth_realsense, (540, 960), mode='nearest',
                              recompute_scale_factor=False)
         img_label = F.interpolate(img_label, (540, 960), mode='nearest',
                              recompute_scale_factor=False).type(torch.int)
@@ -114,16 +116,32 @@ def test(gan_model, psmnet_model, feaex, val_loader, logger, log_dir):
 
             # Save gan results
             img_outputs = {
-                'img_L': {
-                    'input': gan_model.real_A_L, 'fake': gan_model.fake_B_L, 'rec': gan_model.rec_A_L,
-                    'idt': gan_model.idt_B_L
+                'img_L_0': {
+                    'input': gan_model.real_A_L[:,0,:,:][:,None,:,:], 'fake': gan_model.fake_B_L[:,0,:,:][:,None,:,:], 'rec': gan_model.rec_A_L[:,0,:,:][:,None,:,:], 'idt': gan_model.idt_B_L[:,0,:,:][:,None,:,:]
                 },
-                'img_R': {
-                    'input': gan_model.real_A_R, 'fake': gan_model.fake_B_R, 'rec': gan_model.rec_A_R,
-                    'idt': gan_model.idt_B_R
+                'img_L_1': {
+                    'input': gan_model.real_A_L[:,1,:,:][:,None,:,:], 'fake': gan_model.fake_B_L[:,1,:,:][:,None,:,:], 'rec': gan_model.rec_A_L[:,1,:,:][:,None,:,:], 'idt': gan_model.idt_B_L[:,1,:,:][:,None,:,:]
                 },
-                'img_Real': {
-                    'input': gan_model.real_B, 'fake': gan_model.fake_A, 'rec': gan_model.rec_B, 'idt': gan_model.idt_A
+                'img_L_2': {
+                    'input': gan_model.real_A_L[:,2,:,:][:,None,:,:], 'fake': gan_model.fake_B_L[:,2,:,:][:,None,:,:], 'rec': gan_model.rec_A_L[:,2,:,:][:,None,:,:], 'idt': gan_model.idt_B_L[:,2,:,:][:,None,:,:]
+                },
+                'img_R_0': {
+                    'input': gan_model.real_A_R[:,0,:,:][:,None,:,:], 'fake': gan_model.fake_B_R[:,0,:,:][:,None,:,:], 'rec': gan_model.rec_A_R[:,0,:,:][:,None,:,:], 'idt': gan_model.idt_B_R[:,0,:,:][:,None,:,:]
+                },
+                'img_R_1': {
+                    'input': gan_model.real_A_R[:,1,:,:][:,None,:,:], 'fake': gan_model.fake_B_R[:,1,:,:][:,None,:,:], 'rec': gan_model.rec_A_R[:,1,:,:][:,None,:,:], 'idt': gan_model.idt_B_R[:,1,:,:][:,None,:,:]
+                },
+                'img_R_2': {
+                    'input': gan_model.real_A_R[:,2,:,:][:,None,:,:], 'fake': gan_model.fake_B_R[:,2,:,:][:,None,:,:], 'rec': gan_model.rec_A_R[:,2,:,:][:,None,:,:], 'idt': gan_model.idt_B_R[:,2,:,:][:,None,:,:]
+                },
+                'img_Sim_0': {
+                    'input': gan_model.real_B[:,0,:,:][:,None,:,:], 'fake': gan_model.fake_A[:,0,:,:][:,None,:,:], 'rec': gan_model.rec_B[:,0,:,:][:,None,:,:], 'idt': gan_model.idt_A[:,0,:,:][:,None,:,:]
+                },
+                'img_Sim_1': {
+                    'input': gan_model.real_B[:,1,:,:][:,None,:,:], 'fake': gan_model.fake_A[:,1,:,:][:,None,:,:], 'rec': gan_model.rec_B[:,1,:,:][:,None,:,:], 'idt': gan_model.idt_A[:,1,:,:][:,None,:,:]
+                },
+                'img_Sim_2': {
+                    'input': gan_model.real_B[:,2,:,:][:,None,:,:], 'fake': gan_model.fake_A[:,2,:,:][:,None,:,:], 'rec': gan_model.rec_B[:,2,:,:][:,None,:,:], 'idt': gan_model.idt_A[:,2,:,:][:,None,:,:]
                 }
             }
             save_gan_img(img_outputs, os.path.join(log_dir, 'gan', f'{prefix}.png'))
@@ -142,9 +160,9 @@ def test(gan_model, psmnet_model, feaex, val_loader, logger, log_dir):
             mask = (img_disp_l < cfg.ARGS.MAX_DISP) * (img_disp_l > 0)
 
         # Exclude uncertain pixel from realsense_depth_pred
-        realsense_zeros_mask = img_depth_realsense > 0
-        if args.exclude_zeros:
-            mask = mask * realsense_zeros_mask
+        #realsense_zeros_mask = img_depth_realsense > 0
+        #if args.exclude_zeros:
+        #    mask = mask * realsense_zeros_mask
         mask = mask.type(torch.bool)
 
         ground_mask = torch.logical_not(mask).squeeze(0).squeeze(0).detach().cpu().numpy()
@@ -239,8 +257,8 @@ def main():
     model_dict = load_from_dataparallel_model(args.model, 'PSMNet')
     psmnet_model.load_state_dict(model_dict)
 
-    feaex = psmnet_model.module.feature_extraction.ganfeature
-    psmnet_model.module.feature_extraction.gan_train = False
+    feaex = psmnet_model.feature_extraction.ganfeature
+    psmnet_model.feature_extraction.gan_train = False
 
     test(gan_model, psmnet_model, feaex, val_loader, logger, log_dir)
 
