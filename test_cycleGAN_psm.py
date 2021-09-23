@@ -45,7 +45,7 @@ if args.gan_model == '':
 # python test_cycleGAN_psmnet.py --config-file configs/remote_test.yaml --model ../train_8_14_cascade/train1/models/model_best.pth --onreal --exclude-bg --exclude-zeros --debug --gan-model
 
 
-def test(gan_model, psmnet_model, val_loader, logger, log_dir):
+def test(gan_model, psmnet_model, feaex, val_loader, logger, log_dir):
     gan_model.eval()
     psmnet_model.eval()
     total_err_metrics = {'epe': 0, 'bad1': 0, 'bad2': 0,
@@ -68,7 +68,7 @@ def test(gan_model, psmnet_model, val_loader, logger, log_dir):
 
         img_disp_l = data['img_disp_l'].cuda()
         img_depth_l = data['img_depth_l'].cuda()
-        img_depth_realsense = data['img_depth_realsense'].cuda()
+        #img_depth_realsense = data['img_depth_realsense'].cuda()
         img_label = data['img_label'].cuda()
         img_focal_length = data['focal_length'].cuda()
         img_baseline = data['baseline'].cuda()
@@ -239,7 +239,10 @@ def main():
     model_dict = load_from_dataparallel_model(args.model, 'PSMNet')
     psmnet_model.load_state_dict(model_dict)
 
-    test(gan_model, psmnet_model, val_loader, logger, log_dir)
+    feaex = psmnet_model.module.feature_extraction.ganfeature
+    psmnet_model.module.feature_extraction.gan_train = False
+
+    test(gan_model, psmnet_model, feaex, val_loader, logger, log_dir)
 
 
 if __name__ == '__main__':

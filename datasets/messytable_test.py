@@ -68,9 +68,10 @@ class MessytableTestDataset(Dataset):
         return len(self.img_L)
 
     def __getitem__(self, idx):
+        process = Transforms.Compose([Transforms.ToTensor()])
         if self.onReal:
-            img_L_rgb = (np.array(Image.open(self.img_L_real[idx]).convert(mode='L'))[:, :, None] - 127.5) / 127.5
-            img_R_rgb = (np.array(Image.open(self.img_R_real[idx]).convert(mode='L'))[:, :, None] - 127.5) / 127.5
+            img_L_rgb = Image.open(self.img_L_real[idx]).convert(mode='RGB')
+            img_R_rgb = Image.open(self.img_R_real[idx]).convert(mode='RGB')
         else:
             img_L_rgb = (np.array(Image.open(self.img_L[idx]))[:, :, :1] - 127.5) / 127.5
             img_R_rgb = (np.array(Image.open(self.img_R[idx]))[:, :, :1] - 127.5) / 127.5
@@ -96,9 +97,13 @@ class MessytableTestDataset(Dataset):
         img_disp_r = np.zeros_like(img_depth_r)
         img_disp_r[mask] = focal_length * baseline / img_depth_r[mask]
 
+        img_L_rgb, img_R_rgb, img_sim_rgb = process(img_L_rgb), process(img_R_rgb), process(img_sim_rgb)
+        img_L_rgb = (img_L_rgb - 0.5) / 0.5
+        img_R_rgb = (img_R_rgb - 0.5) / 0.5
+
         item = {}
-        item['img_L'] = torch.tensor(img_L_rgb, dtype=torch.float32).permute(2, 0, 1)  # [bs, 1, H, W]
-        item['img_R'] = torch.tensor(img_R_rgb, dtype=torch.float32).permute(2, 0, 1)  # [bs, 1, H, W]
+        item['img_L'] = img_L_rgb # [bs, 1, H, W]
+        item['img_R'] = img_R_rgb  # [bs, 1, H, W]
         item['img_disp_l'] = torch.tensor(img_disp_l, dtype=torch.float32).unsqueeze(0)  # [bs, 1, H, W]
         item['img_depth_l'] = torch.tensor(img_depth_l, dtype=torch.float32).unsqueeze(0)  # [bs, 1, H, W]
         item['img_disp_r'] = torch.tensor(img_disp_r, dtype=torch.float32).unsqueeze(0)  # [bs, 1, H, W]
