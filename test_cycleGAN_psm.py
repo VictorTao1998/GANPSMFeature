@@ -223,7 +223,7 @@ def test(gan_model, psmnet_model, feaex, val_loader, logger, log_dir, summary_wr
         pred_depth_err_np = depth_error_img(pred_depth * 1000, img_depth_l * 1000, mask)
 
         # Save images
-        image_test_output = {'pred_disp': pred_disp_np, 'gt_disp': gt_disp_np, 'disp_err': pred_disp_err_np, 'pred_depth': pred_depth_np, 'gt_depth': gt_depth_np, 'depth_err': pred_depth_err_np}
+        image_test_output = {'pred_disp': pred_disp_np_o, 'gt_disp': gt_disp_np_o, 'disp_err': pred_disp_err_np, 'pred_depth': pred_depth_np_o, 'gt_depth': gt_depth_np_o, 'depth_err': pred_depth_err_np}
         save_images(summary_writer, 'test_psmnet', image_test_output, iteration)
         #save_img(log_dir, prefix, pred_disp_np, gt_disp_np, pred_disp_err_np,
         #         pred_depth_np, gt_depth_np, pred_depth_err_np)
