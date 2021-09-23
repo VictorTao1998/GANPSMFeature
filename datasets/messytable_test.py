@@ -101,7 +101,7 @@ class MessytableTestDataset(Dataset):
         img_L_rgb = (img_L_rgb - 0.5) / 0.5
         img_R_rgb = (img_R_rgb - 0.5) / 0.5
 
-        if self.on Real is False:
+        if self.onReal is False:
             img_L_rgb_real, img_R_rgb_real = process(img_L_rgb_real), process(img_R_rgb_real)
             img_L_rgb_real = (img_L_rgb_real - 0.5) / 0.5
             img_R_rgb_real = (img_R_rgb_real - 0.5) / 0.5
