@@ -233,7 +233,7 @@ def test(gan_model, psmnet_model, feaex, val_loader, logger, log_dir):
 
 def main():
     # Obtain the dataloader
-    val_loader = get_test_loader(cfg.SPLIT.VAL, args.debug, sub=40, onReal=args.onreal)
+    val_loader = get_test_loader(cfg.REAL.TRAIN, args.debug, sub=40, onReal=args.onreal)
 
     # Tensorboard and logger
     os.makedirs(args.output, exist_ok=True)
