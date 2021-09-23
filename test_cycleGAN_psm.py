@@ -81,7 +81,7 @@ def test(gan_model, psmnet_model, feaex, val_loader, logger, log_dir):
         img_depth_l = F.interpolate(img_depth_l, (540, 960), mode='nearest',
                              recompute_scale_factor=False)
         #img_depth_realsense = F.interpolate(img_depth_realsense, (540, 960), mode='nearest',
-                             recompute_scale_factor=False)
+        #                     recompute_scale_factor=False)
         img_label = F.interpolate(img_label, (540, 960), mode='nearest',
                              recompute_scale_factor=False).type(torch.int)
 
