@@ -117,7 +117,7 @@ def test(gan_model, psmnet_model, feaex, val_loader, logger, log_dir):
             img_L = F.pad(img_L, (0, right_pad, top_pad, 0, 0, 0, 0, 0), mode='constant', value=0)
             img_R = F.pad(img_R, (0, right_pad, top_pad, 0, 0, 0, 0, 0), mode='constant', value=0)
             
-            input_sample = {'img_L': img_L, 'img_R': img_R, 'img_real': img_R}
+            input_sample = {'img_L': img_L, 'img_R': img_R, 'img_sim': img_R}
             gan_model.set_input(input_sample)
             with torch.no_grad():
                 gan_model.forward()
