@@ -193,26 +193,27 @@ def test(gan_model, psmnet_model, feaex, val_loader, logger, log_dir, summary_wr
         total_obj_count += obj_count
 
         # Get disparity image
-        pred_disp_np = pred_disp.detach().cpu().numpy()  # [H, W]
+        pred_disp_np = pred_disp.squeeze(0).squeeze(0).detach().cpu().numpy()  # [H, W]
         pred_disp_np[ground_mask] = -1
 
         # Get disparity ground truth image
-        gt_disp_np = img_disp_l.detach().cpu().numpy()
+        gt_disp_np = img_disp_l.squeeze(0).squeeze(0).detach().cpu().numpy()
         gt_disp_np[ground_mask] = -1
 
         # Get disparity error image
         pred_disp_err_np = disp_error_img(pred_disp, img_disp_l, mask)
 
         # Get depth image
-        pred_depth_np = pred_depth.detach().cpu().numpy()  # in m, [H, W]
+        pred_depth_np = pred_depth.squeeze(0).squeeze(0).detach().cpu().numpy()  # in m, [H, W]
         # crop depth map to [0.2m, 2m]
         # pred_depth_np[pred_depth_np < 0.2] = -1
         # pred_depth_np[pred_depth_np > 2] = -1
         pred_depth_np[ground_mask] = -1
 
         # Get depth ground truth image
-        gt_depth_np = img_depth_l.detach().cpu().numpy()
+        gt_depth_np = img_depth_l.squeeze(0).squeeze(0).detach().cpu().numpy()
         gt_depth_np[ground_mask] = -1
+        print('LOG shape: ', img_depth_l.shape, gt_depth_np.shape)
 
         # Get depth error image
         pred_depth_err_np = depth_error_img(pred_depth * 1000, img_depth_l * 1000, mask)
