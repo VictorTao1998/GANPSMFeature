@@ -118,6 +118,8 @@ def test(gan_model, psmnet_model, feaex, val_loader, logger, log_dir, summary_wr
             top_pad = cfg.REAL.PAD_HEIGHT - 540
             img_L = F.pad(img_L, (0, right_pad, top_pad, 0, 0, 0, 0, 0), mode='constant', value=0)
             img_R = F.pad(img_R, (0, right_pad, top_pad, 0, 0, 0, 0, 0), mode='constant', value=0)
+
+            img_L, img_R = feaex(img_L), feaex(img_R)
             
             input_sample = {'img_L': img_L, 'img_R': img_R, 'img_sim': img_R}
             gan_model.set_input(input_sample)
