@@ -73,10 +73,10 @@ class MessytableTestDataset(Dataset):
             img_L_rgb = Image.open(self.img_L_real[idx]).convert(mode='RGB')
             img_R_rgb = Image.open(self.img_R_real[idx]).convert(mode='RGB')
         else:
-            img_L_rgb = (np.array(Image.open(self.img_L[idx]))[:, :, :1] - 127.5) / 127.5
-            img_R_rgb = (np.array(Image.open(self.img_R[idx]))[:, :, :1] - 127.5) / 127.5
-            img_L_rgb_real = (np.array(Image.open(self.img_L_real[idx]).convert(mode='L'))[:, :, None] - 127.5) / 127.5
-            img_R_rgb_real = (np.array(Image.open(self.img_R_real[idx]).convert(mode='L'))[:, :, None] - 127.5) / 127.5
+            img_L_rgb = Image.open(self.img_L[idx]).convert(mode='RGB')
+            img_R_rgb = Image.open(self.img_R[idx]).convert(mode='RGB')
+            img_L_rgb_real = Image.open(self.img_L_real[idx]).convert(mode='RGB')
+            img_R_rgb_real = Image.open(self.img_R_real[idx]).convert(mode='RGB')
 
         img_depth_l = np.array(Image.open(self.img_depth_l[idx])) / 1000  # convert from mm to m
         img_depth_r = np.array(Image.open(self.img_depth_r[idx])) / 1000  # convert from mm to m
@@ -97,9 +97,14 @@ class MessytableTestDataset(Dataset):
         img_disp_r = np.zeros_like(img_depth_r)
         img_disp_r[mask] = focal_length * baseline / img_depth_r[mask]
 
-        img_L_rgb, img_R_rgb, img_sim_rgb = process(img_L_rgb), process(img_R_rgb), process(img_sim_rgb)
+        img_L_rgb, img_R_rgb = process(img_L_rgb), process(img_R_rgb)
         img_L_rgb = (img_L_rgb - 0.5) / 0.5
         img_R_rgb = (img_R_rgb - 0.5) / 0.5
+
+        if self.on Real is False:
+            img_L_rgb_real, img_R_rgb_real = process(img_L_rgb_real), process(img_R_rgb_real)
+            img_L_rgb_real = (img_L_rgb_real - 0.5) / 0.5
+            img_R_rgb_real = (img_R_rgb_real - 0.5) / 0.5
 
         item = {}
         item['img_L'] = img_L_rgb # [bs, 1, H, W]
@@ -114,8 +119,8 @@ class MessytableTestDataset(Dataset):
         item['baseline'] = torch.tensor(baseline, dtype=torch.float32).unsqueeze(0).unsqueeze(0).unsqueeze(0)
 
         if self.onReal is False:
-            item['img_L_real'] = torch.tensor(img_L_rgb_real, dtype=torch.float32).permute(2, 0, 1)  # [bs, 1, H, W]
-            item['img_R_real'] = torch.tensor(img_R_rgb_real, dtype=torch.float32).permute(2, 0, 1)  # [bs, 1, H, W]
+            item['img_L_real'] = img_L_rgb_real  # [bs, 1, H, W]
+            item['img_R_real'] = img_R_rgb_real  # [bs, 1, H, W]
 
         return item
 

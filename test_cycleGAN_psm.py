@@ -48,6 +48,7 @@ if args.gan_model == '':
 def test(gan_model, psmnet_model, feaex, val_loader, logger, log_dir):
     gan_model.eval()
     psmnet_model.eval()
+    feaex.eval()
     psmnet_model.feature_extraction.gan_train = True
 
     total_err_metrics = {'epe': 0, 'bad1': 0, 'bad2': 0,
@@ -97,16 +98,26 @@ def test(gan_model, psmnet_model, feaex, val_loader, logger, log_dir):
             img_depth_l = apply_disparity_cu(img_depth_r, img_disp_r.type(torch.int))  # [bs, 1, H, W]
 
         # If test on real dataset need to crop input image to (540, 960)
-        if args.onreal:
+        if not args.onreal:
+            right_pad = cfg.REAL.PAD_WIDTH - 960
+            top_pad = cfg.REAL.PAD_HEIGHT - 540
+            img_L = F.pad(img_L, (0, right_pad, top_pad, 0, 0, 0, 0, 0), mode='constant', value=0)
+            img_R = F.pad(img_R, (0, right_pad, top_pad, 0, 0, 0, 0, 0), mode='constant', value=0)
+        else:  # If testing on sim, use GAN to generate img_L and img_R
+            #img_L_real = data['img_L_real'].cuda()    # [bs, 1, H, W]
+            #img_L_real = F.interpolate(img_L_real, (540, 960), mode='bilinear',
+            #                      recompute_scale_factor=False, align_corners=False)
             img_L = F.interpolate(img_L, (540, 960), mode='bilinear',
                              recompute_scale_factor=False, align_corners=False)
             img_R = F.interpolate(img_R, (540, 960), mode='bilinear',
                              recompute_scale_factor=False, align_corners=False)
-        else:  # If testing on sim, use GAN to generate img_L and img_R
-            img_L_real = data['img_L_real'].cuda()    # [bs, 1, H, W]
-            img_L_real = F.interpolate(img_L_real, (540, 960), mode='bilinear',
-                                  recompute_scale_factor=False, align_corners=False)
-            input_sample = {'img_L': img_L, 'img_R': img_R, 'img_real': img_L_real}
+            
+            right_pad = cfg.REAL.PAD_WIDTH - 960
+            top_pad = cfg.REAL.PAD_HEIGHT - 540
+            img_L = F.pad(img_L, (0, right_pad, top_pad, 0, 0, 0, 0, 0), mode='constant', value=0)
+            img_R = F.pad(img_R, (0, right_pad, top_pad, 0, 0, 0, 0, 0), mode='constant', value=0)
+            
+            input_sample = {'img_L': img_L, 'img_R': img_R, 'img_real': img_R}
             gan_model.set_input(input_sample)
             with torch.no_grad():
                 gan_model.forward()
@@ -133,24 +144,15 @@ def test(gan_model, psmnet_model, feaex, val_loader, logger, log_dir):
                 },
                 'img_R_2': {
                     'input': gan_model.real_A_R[:,2,:,:][:,None,:,:], 'fake': gan_model.fake_B_R[:,2,:,:][:,None,:,:], 'rec': gan_model.rec_A_R[:,2,:,:][:,None,:,:], 'idt': gan_model.idt_B_R[:,2,:,:][:,None,:,:]
-                },
-                'img_Sim_0': {
-                    'input': gan_model.real_B[:,0,:,:][:,None,:,:], 'fake': gan_model.fake_A[:,0,:,:][:,None,:,:], 'rec': gan_model.rec_B[:,0,:,:][:,None,:,:], 'idt': gan_model.idt_A[:,0,:,:][:,None,:,:]
-                },
-                'img_Sim_1': {
-                    'input': gan_model.real_B[:,1,:,:][:,None,:,:], 'fake': gan_model.fake_A[:,1,:,:][:,None,:,:], 'rec': gan_model.rec_B[:,1,:,:][:,None,:,:], 'idt': gan_model.idt_A[:,1,:,:][:,None,:,:]
-                },
-                'img_Sim_2': {
-                    'input': gan_model.real_B[:,2,:,:][:,None,:,:], 'fake': gan_model.fake_A[:,2,:,:][:,None,:,:], 'rec': gan_model.rec_B[:,2,:,:][:,None,:,:], 'idt': gan_model.idt_A[:,2,:,:][:,None,:,:]
                 }
             }
             save_gan_img(img_outputs, os.path.join(log_dir, 'gan', f'{prefix}.png'))
 
         # Pad the imput image and depth disp image to 960 * 544
-        right_pad = cfg.REAL.PAD_WIDTH - 960
-        top_pad = cfg.REAL.PAD_HEIGHT - 540
-        img_L = F.pad(img_L, (0, right_pad, top_pad, 0, 0, 0, 0, 0), mode='constant', value=0)
-        img_R = F.pad(img_R, (0, right_pad, top_pad, 0, 0, 0, 0, 0), mode='constant', value=0)
+        #right_pad = cfg.REAL.PAD_WIDTH - 960
+        #top_pad = cfg.REAL.PAD_HEIGHT - 540
+        #img_L = F.pad(img_L, (0, right_pad, top_pad, 0, 0, 0, 0, 0), mode='constant', value=0)
+        #img_R = F.pad(img_R, (0, right_pad, top_pad, 0, 0, 0, 0, 0), mode='constant', value=0)
 
         if args.exclude_bg:
             # Mask ground pixel to False
