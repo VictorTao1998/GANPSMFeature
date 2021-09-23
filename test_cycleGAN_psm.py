@@ -185,8 +185,7 @@ def test(gan_model, psmnet_model, feaex, val_loader, logger, log_dir, summary_wr
         logger.info(f'Test instance {prefix} - {err_metrics}')
 
         # Get object error
-        obj_disp_err, obj_depth_err, \
-            obj_depth_4_err, obj_count = compute_obj_err(img_disp_l, img_depth_l, pred_disp, img_focal_length,
+        obj_disp_err, obj_depth_err, obj_count = compute_obj_err(img_disp_l, img_depth_l, pred_disp, img_focal_length,
                                                      img_baseline, img_label, mask, cfg.SPLIT.OBJ_NUM)
         total_obj_disp_err += obj_disp_err
         total_obj_depth_err += obj_depth_err
