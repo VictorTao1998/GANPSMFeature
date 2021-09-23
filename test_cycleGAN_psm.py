@@ -189,7 +189,7 @@ def test(gan_model, psmnet_model, feaex, val_loader, logger, log_dir, summary_wr
                                                      img_baseline, img_label, mask, cfg.SPLIT.OBJ_NUM)
         total_obj_disp_err += obj_disp_err
         total_obj_depth_err += obj_depth_err
-        total_obj_depth_4_err += obj_depth_4_err
+        #total_obj_depth_4_err += obj_depth_4_err
         total_obj_count += obj_count
 
         # Get disparity image
@@ -231,8 +231,8 @@ def test(gan_model, psmnet_model, feaex, val_loader, logger, log_dir, summary_wr
     # Save object error to csv file
     total_obj_disp_err /= total_obj_count
     total_obj_depth_err /= total_obj_count
-    total_obj_depth_4_err /= total_obj_count
-    save_obj_err_file(total_obj_disp_err, total_obj_depth_err, total_obj_depth_4_err, log_dir)
+    #total_obj_depth_4_err /= total_obj_count
+    #save_obj_err_file(total_obj_disp_err, total_obj_depth_err, total_obj_depth_4_err, log_dir)
 
     logger.info(f'Successfully saved object error to obj_err.txt')
 
