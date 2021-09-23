@@ -15,9 +15,10 @@ from nets.psmnet import PSMNet
 from datasets.messytable_test import get_test_loader
 from utils.cascade_metrics import compute_err_metric, compute_obj_err
 from utils.config import cfg
-from utils.util import get_time_string, setup_logger, depth_error_img, disp_error_img
+from utils.util import get_time_string, setup_logger, depth_error_img, disp_error_img, save_images_grid, save_images
 from utils.test_util import load_from_dataparallel_model, save_img, save_gan_img, save_obj_err_file
 from utils.warp_ops import apply_disparity_cu
+
 
 parser = argparse.ArgumentParser(description='Testing for CycleGAN + PSMNet')
 parser.add_argument('--config-file', type=str, default='./configs/local_test.yaml',
@@ -146,7 +147,8 @@ def test(gan_model, psmnet_model, feaex, val_loader, logger, log_dir):
                     'input': gan_model.real_A_R[:,2,:,:][:,None,:,:], 'fake': gan_model.fake_B_R[:,2,:,:][:,None,:,:], 'rec': gan_model.rec_A_R[:,2,:,:][:,None,:,:], 'idt': gan_model.idt_B_R[:,2,:,:][:,None,:,:]
                 }
             }
-            save_gan_img(img_outputs, os.path.join(log_dir, 'gan', f'{prefix}.png'))
+            save_images_grid(logger, 'test_gan', img_outputs, iteration)
+            #save_gan_img(img_outputs, os.path.join(log_dir, 'gan', f'{prefix}.png'))
 
         # Pad the imput image and depth disp image to 960 * 544
         #right_pad = cfg.REAL.PAD_WIDTH - 960
@@ -216,8 +218,10 @@ def test(gan_model, psmnet_model, feaex, val_loader, logger, log_dir):
         pred_depth_err_np = depth_error_img(pred_depth * 1000, img_depth_l * 1000, mask)
 
         # Save images
-        save_img(log_dir, prefix, pred_disp_np, gt_disp_np, pred_disp_err_np,
-                 pred_depth_np, gt_depth_np, pred_depth_err_np)
+        image_test_output = {'pred_disp': pred_disp_np, 'gt_disp': gt_disp_np, 'disp_err': pred_disp_err_np, 'pred_depth': pred_depth_np, 'gt_depth': gt_depth_np, 'depth_err': pred_depth_err_np}
+        save_images(logger, 'test_psmnet', image_test_output, iteration)
+        #save_img(log_dir, prefix, pred_disp_np, gt_disp_np, pred_disp_err_np,
+        #         pred_depth_np, gt_depth_np, pred_depth_err_np)
 
     # Get final error metrics
     for k in total_err_metrics.keys():
