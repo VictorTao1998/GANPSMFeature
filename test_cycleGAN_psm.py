@@ -9,6 +9,7 @@ import torch
 import torch.nn.functional as F
 from tqdm import tqdm
 import numpy as np
+import tensorboardX
 
 from nets.cycle_gan import CycleGANModel
 from nets.psmnet import PSMNet
@@ -46,7 +47,7 @@ if args.gan_model == '':
 # python test_cycleGAN_psmnet.py --config-file configs/remote_test.yaml --model ../train_8_14_cascade/train1/models/model_best.pth --onreal --exclude-bg --exclude-zeros --debug --gan-model
 
 
-def test(gan_model, psmnet_model, feaex, val_loader, logger, log_dir):
+def test(gan_model, psmnet_model, feaex, val_loader, logger, log_dir, summary_writer):
     gan_model.eval()
     psmnet_model.eval()
     feaex.eval()
@@ -147,7 +148,7 @@ def test(gan_model, psmnet_model, feaex, val_loader, logger, log_dir):
                     'input': gan_model.real_A_R[:,2,:,:][:,None,:,:], 'fake': gan_model.fake_B_R[:,2,:,:][:,None,:,:], 'rec': gan_model.rec_A_R[:,2,:,:][:,None,:,:], 'idt': gan_model.idt_B_R[:,2,:,:][:,None,:,:]
                 }
             }
-            save_images_grid(logger, 'test_gan', img_outputs, iteration)
+            save_images_grid(summary_writer, 'test_gan', img_outputs, iteration)
             #save_gan_img(img_outputs, os.path.join(log_dir, 'gan', f'{prefix}.png'))
 
         # Pad the imput image and depth disp image to 960 * 544
@@ -219,7 +220,7 @@ def test(gan_model, psmnet_model, feaex, val_loader, logger, log_dir):
 
         # Save images
         image_test_output = {'pred_disp': pred_disp_np, 'gt_disp': gt_disp_np, 'disp_err': pred_disp_err_np, 'pred_depth': pred_depth_np, 'gt_depth': gt_depth_np, 'depth_err': pred_depth_err_np}
-        save_images(logger, 'test_psmnet', image_test_output, iteration)
+        save_images(summary_writer, 'test_psmnet', image_test_output, iteration)
         #save_img(log_dir, prefix, pred_disp_np, gt_disp_np, pred_disp_err_np,
         #         pred_depth_np, gt_depth_np, pred_depth_err_np)
 
@@ -259,6 +260,7 @@ def main():
 
     # Get cascade model
     logger.info(f'Loaded the checkpoint: {args.model}')
+    summary_writer = tensorboardX.SummaryWriter(logdir=args.output)
     psmnet_model = PSMNet(maxdisp=cfg.ARGS.MAX_DISP).to(cuda_device)
     model_dict = load_from_dataparallel_model(args.model, 'PSMNet')
     psmnet_model.load_state_dict(model_dict)
@@ -266,7 +268,7 @@ def main():
     feaex = psmnet_model.feature_extraction.ganfeature
     psmnet_model.feature_extraction.gan_train = False
 
-    test(gan_model, psmnet_model, feaex, val_loader, logger, log_dir)
+    test(gan_model, psmnet_model, feaex, val_loader, logger, log_dir, summary_writer)
 
 
 if __name__ == '__main__':
