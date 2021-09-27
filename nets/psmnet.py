@@ -67,7 +67,7 @@ class PSMNet(nn.Module):
         self.maxdisp = maxdisp
 
         self.feature_extraction = FeatureExtraction(False)
-
+        
         self.dres0 = nn.Sequential(
             convbn_3d(64, 32, 3, 1, 1),
             nn.ReLU(inplace=True),
@@ -103,7 +103,6 @@ class PSMNet(nn.Module):
         # for m in self.modules():
         #     if type(m) == (nn.Conv2d or nn.Conv3d or nn.Linear) :
         #         torch.nn.init.xavier_uniform_(m.weight)
-
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
@@ -119,6 +118,7 @@ class PSMNet(nn.Module):
                 m.bias.data.zero_()
             elif isinstance(m, nn.Linear):
                 m.bias.data.zero_()
+
 
     def forward(self, img_L, img_R):
         refimg_feature = self.feature_extraction(img_L)  # [bs, 32, H/4, W/4]

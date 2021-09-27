@@ -83,6 +83,13 @@ class FeatureExtraction(nn.Module):
         #self.ganfeature = nn.Conv2d(3, 3, kernel_size=3, stride=1, padding=1, dilation=1, bias=False)
         self.ganfeature = nn.Sequential(
             nn.Conv2d(3, 3, kernel_size=3, stride=1, padding=1, dilation=1, bias=False),
+            nn.Conv2d(3, 3, kernel_size=3, stride=1, padding=1, dilation=1, bias=False),
+            nn.Conv2d(3, 3, kernel_size=3, stride=1, padding=1, dilation=1, bias=False),
+            nn.Conv2d(3, 3, kernel_size=3, stride=1, padding=1, dilation=1, bias=False),
+            nn.Conv2d(3, 3, kernel_size=3, stride=1, padding=1, dilation=1, bias=False),
+            nn.Conv2d(3, 3, kernel_size=3, stride=1, padding=1, dilation=1, bias=False),
+            nn.Conv2d(3, 3, kernel_size=3, stride=1, padding=1, dilation=1, bias=False),
+            nn.Conv2d(3, 3, kernel_size=3, stride=1, padding=1, dilation=1, bias=False),
             nn.Tanh()
         )
         self.firstconv = nn.Sequential(

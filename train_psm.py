@@ -62,6 +62,7 @@ logger.info(f'Running with {num_gpus} GPUs')
 
 
 def train(psmnet_model, psmnet_optimizer, TrainImgLoader, ValImgLoader):
+    print('start training')
     cur_err = np.inf    # store best result
 
     for epoch_idx in range(cfg.SOLVER.EPOCHS):
@@ -240,12 +241,14 @@ if __name__ == '__main__':
                                                    shuffle=False, num_workers=cfg.SOLVER.NUM_WORKER, drop_last=False)
 
     # Create PSMNet model
-    psmnet_model = PSMNet(maxdisp=cfg.ARGS.MAX_DISP).to(cuda_device)
+    psmnet_model = PSMNet(maxdisp=cfg.ARGS.MAX_DISP)
+    psmnet_model = psmnet_model.to(cuda_device)
     psmnet_optimizer = torch.optim.Adam(psmnet_model.parameters(), lr=cfg.SOLVER.LR_CASCADE, betas=(0.9, 0.999))
     if is_distributed:
         psmnet_model = torch.nn.parallel.DistributedDataParallel(
             psmnet_model, device_ids=[args.local_rank], output_device=args.local_rank)
     else:
+  
         psmnet_model = torch.nn.DataParallel(psmnet_model)
 
     # Start training
