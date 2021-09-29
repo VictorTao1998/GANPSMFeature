@@ -160,6 +160,7 @@ def test(gan_model, psmnet_model, feaex, val_loader, logger, log_dir, summary_wr
         #img_R = F.pad(img_R, (0, right_pad, top_pad, 0, 0, 0, 0, 0), mode='constant', value=0)
 
         if args.exclude_bg:
+            print("flag is: ", args.exclude_bg)
             # Mask ground pixel to False
             img_ground_mask = (img_depth_l > 0) & (img_depth_l < 1.25)
             mask = (img_disp_l < cfg.ARGS.MAX_DISP) * (img_disp_l > 0) * img_ground_mask
