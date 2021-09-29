@@ -73,7 +73,7 @@ def test(gan_model, psmnet_model, feaex, val_loader, logger, log_dir, summary_wr
 
         img_disp_l = data['img_disp_l'].cuda()
         img_depth_l = data['img_depth_l'].cuda()
-        #img_depth_realsense = data['img_depth_realsense'].cuda()
+        img_depth_realsense = data['img_depth_realsense'].cuda()
         img_label = data['img_label'].cuda()
         img_focal_length = data['focal_length'].cuda()
         img_baseline = data['baseline'].cuda()
@@ -83,8 +83,8 @@ def test(gan_model, psmnet_model, feaex, val_loader, logger, log_dir, summary_wr
                              recompute_scale_factor=False)
         img_depth_l = F.interpolate(img_depth_l, (540, 960), mode='nearest',
                              recompute_scale_factor=False)
-        #img_depth_realsense = F.interpolate(img_depth_realsense, (540, 960), mode='nearest',
-        #                     recompute_scale_factor=False)
+        img_depth_realsense = F.interpolate(img_depth_realsense, (540, 960), mode='nearest',
+                             recompute_scale_factor=False)
         img_label = F.interpolate(img_label, (540, 960), mode='nearest',
                              recompute_scale_factor=False).type(torch.int)
 
@@ -109,15 +109,15 @@ def test(gan_model, psmnet_model, feaex, val_loader, logger, log_dir, summary_wr
             #img_L_real = data['img_L_real'].cuda()    # [bs, 1, H, W]
             #img_L_real = F.interpolate(img_L_real, (540, 960), mode='bilinear',
             #                      recompute_scale_factor=False, align_corners=False)
-            img_L = F.interpolate(img_L, (540, 960), mode='bilinear',
+            img_L_o = F.interpolate(img_L, (540, 960), mode='bilinear',
                              recompute_scale_factor=False, align_corners=False)
-            img_R = F.interpolate(img_R, (540, 960), mode='bilinear',
+            img_R_o = F.interpolate(img_R, (540, 960), mode='bilinear',
                              recompute_scale_factor=False, align_corners=False)
             
             right_pad = cfg.REAL.PAD_WIDTH - 960
             top_pad = cfg.REAL.PAD_HEIGHT - 540
-            img_L = F.pad(img_L, (0, right_pad, top_pad, 0, 0, 0, 0, 0), mode='constant', value=0)
-            img_R = F.pad(img_R, (0, right_pad, top_pad, 0, 0, 0, 0, 0), mode='constant', value=0)
+            img_L = F.pad(img_L_o, (0, right_pad, top_pad, 0, 0, 0, 0, 0), mode='constant', value=0)
+            img_R = F.pad(img_R_o, (0, right_pad, top_pad, 0, 0, 0, 0, 0), mode='constant', value=0)
 
             img_L, img_R = feaex(img_L), feaex(img_R)
             
@@ -130,6 +130,7 @@ def test(gan_model, psmnet_model, feaex, val_loader, logger, log_dir, summary_wr
                 img_R = gan_model.fake_B_R  # [bs, 1, H, W]
 
             # Save gan results
+            #print(img_L_o.shape, img_R_o.shape, gan_model.real_A_L[:,0,:,:][:,None,:,:].shape, prefix)
             img_outputs = {
                 'img_L_0': {
                     'input': gan_model.real_A_L[:,0,:,:][:,None,:,:], 'fake': gan_model.fake_B_L[:,0,:,:][:,None,:,:], 'rec': gan_model.rec_A_L[:,0,:,:][:,None,:,:], 'idt': gan_model.idt_B_L[:,0,:,:][:,None,:,:]
@@ -150,8 +151,15 @@ def test(gan_model, psmnet_model, feaex, val_loader, logger, log_dir, summary_wr
                     'input': gan_model.real_A_R[:,2,:,:][:,None,:,:], 'fake': gan_model.fake_B_R[:,2,:,:][:,None,:,:], 'rec': gan_model.rec_A_R[:,2,:,:][:,None,:,:], 'idt': gan_model.idt_B_R[:,2,:,:][:,None,:,:]
                 }
             }
+            img_inputs = {
+                'input': {
+                    'input_L': img_L_o, 'input_R': img_R_o
+                }
+            }
+            #save_images_grid(summary_writer, 'test_gan', input_sample, iteration)
+            save_images_grid(summary_writer, 'test_gan', img_inputs, iteration)
             save_images_grid(summary_writer, 'test_gan', img_outputs, iteration)
-            #save_gan_img(img_outputs, os.path.join(log_dir, 'gan', f'{prefix}.png'))
+            save_gan_img(img_outputs, os.path.join(log_dir, 'gan', f'{prefix}.png'))
 
         # Pad the imput image and depth disp image to 960 * 544
         #right_pad = cfg.REAL.PAD_WIDTH - 960
@@ -160,7 +168,7 @@ def test(gan_model, psmnet_model, feaex, val_loader, logger, log_dir, summary_wr
         #img_R = F.pad(img_R, (0, right_pad, top_pad, 0, 0, 0, 0, 0), mode='constant', value=0)
 
         if args.exclude_bg:
-            print("flag is: ", args.exclude_bg)
+            print("bg flag is: ", args.exclude_bg)
             # Mask ground pixel to False
             img_ground_mask = (img_depth_l > 0) & (img_depth_l < 1.25)
             mask = (img_disp_l < cfg.ARGS.MAX_DISP) * (img_disp_l > 0) * img_ground_mask
@@ -168,9 +176,10 @@ def test(gan_model, psmnet_model, feaex, val_loader, logger, log_dir, summary_wr
             mask = (img_disp_l < cfg.ARGS.MAX_DISP) * (img_disp_l > 0)
 
         # Exclude uncertain pixel from realsense_depth_pred
-        #realsense_zeros_mask = img_depth_realsense > 0
-        #if args.exclude_zeros:
-        #    mask = mask * realsense_zeros_mask
+        realsense_zeros_mask = img_depth_realsense > 0
+        if args.exclude_zeros:
+            print("zero flag is: ", args.exclude_zeros)
+            mask = mask * realsense_zeros_mask
         mask = mask.type(torch.bool)
 
         ground_mask = torch.logical_not(mask).squeeze(0).squeeze(0).detach().cpu().numpy()
@@ -188,11 +197,11 @@ def test(gan_model, psmnet_model, feaex, val_loader, logger, log_dir, summary_wr
         logger.info(f'Test instance {prefix} - {err_metrics}')
 
         # Get object error
-        obj_disp_err, obj_depth_err, obj_count = compute_obj_err(img_disp_l, img_depth_l, pred_disp, img_focal_length,
+        obj_disp_err, obj_depth_err, obj_depth_4_err, obj_count = compute_obj_err(img_disp_l, img_depth_l, pred_disp, img_focal_length,
                                                      img_baseline, img_label, mask, cfg.SPLIT.OBJ_NUM)
         total_obj_disp_err += obj_disp_err
         total_obj_depth_err += obj_depth_err
-        #total_obj_depth_4_err += obj_depth_4_err
+        total_obj_depth_4_err += obj_depth_4_err
         total_obj_count += obj_count
 
         # Get disparity image
@@ -207,6 +216,7 @@ def test(gan_model, psmnet_model, feaex, val_loader, logger, log_dir, summary_wr
 
         # Get disparity error image
         pred_disp_err_np = disp_error_img(pred_disp, img_disp_l, mask)
+        #print("disperr: ", pred_disp_err_np.shape)
 
         # Get depth image
         pred_depth_np = pred_depth.squeeze(0).squeeze(0).detach().cpu().numpy()  # in m, [H, W]
@@ -224,12 +234,13 @@ def test(gan_model, psmnet_model, feaex, val_loader, logger, log_dir, summary_wr
 
         # Get depth error image
         pred_depth_err_np = depth_error_img(pred_depth * 1000, img_depth_l * 1000, mask)
+        #print("deperr: ", pred_depth_err_np.shape)
 
         # Save images
-        image_test_output = {'pred_disp': pred_disp_np_o, 'gt_disp': gt_disp_np_o, 'disp_err': pred_disp_err_np, 'pred_depth': pred_depth_np_o, 'gt_depth': gt_depth_np_o, 'depth_err': pred_depth_err_np}
+        image_test_output = {'pred_disp': pred_disp_np_o, 'gt_disp': gt_disp_np_o, 'pred_depth': pred_depth_np_o, 'gt_depth': gt_depth_np_o}
         save_images(summary_writer, 'test_psmnet', image_test_output, iteration)
-        #save_img(log_dir, prefix, pred_disp_np, gt_disp_np, pred_disp_err_np,
-        #         pred_depth_np, gt_depth_np, pred_depth_err_np)
+        save_img(log_dir, prefix, pred_disp_np, gt_disp_np, pred_disp_err_np,
+                 pred_depth_np, gt_depth_np, pred_depth_err_np)
 
     # Get final error metrics
     for k in total_err_metrics.keys():
@@ -239,8 +250,8 @@ def test(gan_model, psmnet_model, feaex, val_loader, logger, log_dir, summary_wr
     # Save object error to csv file
     total_obj_disp_err /= total_obj_count
     total_obj_depth_err /= total_obj_count
-    #total_obj_depth_4_err /= total_obj_count
-    #save_obj_err_file(total_obj_disp_err, total_obj_depth_err, total_obj_depth_4_err, log_dir)
+    total_obj_depth_4_err /= total_obj_count
+    save_obj_err_file(total_obj_disp_err, total_obj_depth_err, total_obj_depth_4_err, log_dir)
 
     logger.info(f'Successfully saved object error to obj_err.txt')
 

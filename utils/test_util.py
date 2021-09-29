@@ -8,6 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import torch
 from .config import cfg
+import cv2
 
 
 def load_from_dataparallel_model(model_pth, sub_model_name):
@@ -20,6 +21,15 @@ def load_from_dataparallel_model(model_pth, sub_model_name):
         name = k[7:]  # remove `module.`
         new_state_dict[name] = v
     return new_state_dict
+
+def calc_left_ir_depth_from_rgb(k_main, k_l, rt_main, rt_l, rgb_depth):
+    rt_lmain = rt_l @ np.linalg.inv(rt_main)
+    h, w = rgb_depth.shape
+    irl_depth = cv2.rgbd.registerDepth(k_main, k_l, None, rt_lmain, rgb_depth, (w, h), depthDilation=True)
+    irl_depth[np.isnan(irl_depth)] = 0
+    irl_depth[np.isinf(irl_depth)] = 0
+    irl_depth[irl_depth < 0] = 0
+    return irl_depth
 
 
 def save_img(log_dir, prefix,
@@ -56,7 +66,7 @@ def save_img(log_dir, prefix,
 def save_gan_img(img_outputs, path):
     # Create plt figure
     fig = plt.figure(figsize=(24, 12))
-    rows = 3
+    rows = 6
     columns = 4
     count = 1
     for tag, dict_value in img_outputs.items():
@@ -66,6 +76,7 @@ def save_gan_img(img_outputs, path):
             img_title = f'{tag}-{subtag}'
             # Add image
             fig.add_subplot(rows, columns, count)
+            #print(img.shape)
             plt.imshow(img)
             plt.axis('off')
             plt.title(img_title, fontsize=20)

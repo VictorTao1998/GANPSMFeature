@@ -25,6 +25,9 @@ _C.SPLIT.DEPTHR = 'depthR.png'
 _C.SPLIT.META = 'meta.pkl'
 _C.SPLIT.LABEL = 'irL_label_image.png'
 
+_C.SPLIT.SIM_REALSENSE = '0128_depth_denoised.png'
+_C.SPLIT.REAL_REALSENSE = '1024_depth_real.png'
+
 # Configuration for testing on real dataset
 _C.REAL = CN()
 _C.REAL.DATASET = '/code/real_dataset_local_v9'  # path to your real testing dataset

@@ -12,6 +12,7 @@ from torch.utils.data import Dataset, DataLoader
 
 from utils.config import cfg
 from utils.util import load_pickle
+from utils.test_util import calc_left_ir_depth_from_rgb
 
 
 class MessytableTestDataset(Dataset):
@@ -22,7 +23,7 @@ class MessytableTestDataset(Dataset):
         :param sub: If debug mode is enabled, sub will be the number of data loaded
         """
         self.img_L, self.img_R, self.img_L_real, self.img_R_real, self.img_depth_l, self.img_depth_r, \
-            self.img_meta, self.img_label = self.__get_split_files__(split_file, debug=debug, sub=sub)
+            self.img_meta, self.img_label, self.img_sim_realsense, self.img_real_realsense = self.__get_split_files__(split_file, debug=debug, sub=sub)
         self.onReal = onReal
 
     @staticmethod
@@ -39,6 +40,8 @@ class MessytableTestDataset(Dataset):
         sim_img_right_name = cfg.SPLIT.RIGHT
         real_img_left_name = cfg.REAL.LEFT
         real_img_right_name = cfg.REAL.RIGHT
+        sim_realsense = cfg.SPLIT.SIM_REALSENSE
+        real_realsense = cfg.SPLIT.REAL_REALSENSE
 
         with open(split_file, 'r') as f:
             prefix = [line.strip() for line in f]
@@ -51,6 +54,8 @@ class MessytableTestDataset(Dataset):
             img_depth_r = [os.path.join(cfg.DIR.DATASET, p, cfg.SPLIT.DEPTHR) for p in prefix]
             img_meta = [os.path.join(cfg.DIR.DATASET, p, cfg.SPLIT.META) for p in prefix]
             img_label = [os.path.join(cfg.REAL.DATASET, p, cfg.SPLIT.LABEL) for p in prefix]
+            img_sim_realsense = [os.path.join(sim_dataset, p, sim_realsense) for p in prefix]
+            img_real_realsense = [os.path.join(real_dataset, p, real_realsense) for p in prefix]
 
             if debug is True:
                 img_L_sim = img_L_sim[:sub]
@@ -61,8 +66,10 @@ class MessytableTestDataset(Dataset):
                 img_depth_r = img_depth_r[:sub]
                 img_meta = img_meta[:sub]
                 img_label = img_label[:sub]
+                img_sim_realsense = img_sim_realsense[:sub]
+                img_real_realsense = img_real_realsense[:sub]
 
-        return img_L_sim, img_R_sim, img_L_real, img_R_real, img_depth_l, img_depth_r, img_meta, img_label
+        return img_L_sim, img_R_sim, img_L_real, img_R_real, img_depth_l, img_depth_r, img_meta, img_label, img_sim_realsense, img_real_realsense
 
     def __len__(self):
         return len(self.img_L)
@@ -72,11 +79,13 @@ class MessytableTestDataset(Dataset):
         if self.onReal:
             img_L_rgb = Image.open(self.img_L_real[idx]).convert(mode='RGB')
             img_R_rgb = Image.open(self.img_R_real[idx]).convert(mode='RGB')
+            img_depth_realsense = np.array(Image.open(self.img_real_realsense[idx])) / 1000
         else:
             img_L_rgb = Image.open(self.img_L[idx]).convert(mode='RGB')
             img_R_rgb = Image.open(self.img_R[idx]).convert(mode='RGB')
             img_L_rgb_real = Image.open(self.img_L_real[idx]).convert(mode='RGB')
             img_R_rgb_real = Image.open(self.img_R_real[idx]).convert(mode='RGB')
+            img_depth_realsense = np.array(Image.open(self.img_sim_realsense[idx])) / 1000
 
         img_depth_l = np.array(Image.open(self.img_depth_l[idx])) / 1000  # convert from mm to m
         img_depth_r = np.array(Image.open(self.img_depth_r[idx])) / 1000  # convert from mm to m
@@ -84,8 +93,10 @@ class MessytableTestDataset(Dataset):
         img_label = np.array(Image.open(self.img_label[idx]))
 
         # Convert depth map to disparity map
+        extrinsic = img_meta['extrinsic']
         extrinsic_l = img_meta['extrinsic_l']
         extrinsic_r = img_meta['extrinsic_r']
+        intrinsic = img_meta['intrinsic']
         intrinsic_l = img_meta['intrinsic_l']
         baseline = np.linalg.norm(extrinsic_l[:, -1] - extrinsic_r[:, -1])
         focal_length = intrinsic_l[0, 0] / 2
@@ -96,6 +107,9 @@ class MessytableTestDataset(Dataset):
         mask = img_depth_r > 0
         img_disp_r = np.zeros_like(img_depth_r)
         img_disp_r[mask] = focal_length * baseline / img_depth_r[mask]
+
+        img_depth_realsense = calc_left_ir_depth_from_rgb(intrinsic, intrinsic_l,
+                                                          extrinsic, extrinsic_l, img_depth_realsense)
 
         img_L_rgb, img_R_rgb = process(img_L_rgb), process(img_R_rgb)
         img_L_rgb = (img_L_rgb - 0.5) / 0.5
@@ -113,6 +127,7 @@ class MessytableTestDataset(Dataset):
         item['img_depth_l'] = torch.tensor(img_depth_l, dtype=torch.float32).unsqueeze(0)  # [bs, 1, H, W]
         item['img_disp_r'] = torch.tensor(img_disp_r, dtype=torch.float32).unsqueeze(0)  # [bs, 1, H, W]
         item['img_depth_r'] = torch.tensor(img_depth_r, dtype=torch.float32).unsqueeze(0)  # [bs, 1, H, W]
+        item['img_depth_realsense'] = torch.tensor(img_depth_realsense, dtype=torch.float32).unsqueeze(0)  # [bs, 1, H, W]
         item['img_label'] = torch.tensor(img_label, dtype=torch.float32).unsqueeze(0)  # [bs, 1, H, W]
         item['prefix'] = self.img_L[idx].split('/')[-2]
         item['focal_length'] = torch.tensor(focal_length, dtype=torch.float32).unsqueeze(0).unsqueeze(0).unsqueeze(0)
