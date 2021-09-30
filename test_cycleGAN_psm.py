@@ -101,10 +101,19 @@ def test(gan_model, psmnet_model, feaex, val_loader, logger, log_dir, summary_wr
 
         # If test on real dataset need to crop input image to (540, 960)
         if not args.onreal:
+            img_inputs = {
+                'input': {
+                    'input_L': img_L, 'input_R': img_R
+                }
+            }
+            save_images_grid(summary_writer, 'test_gan', img_inputs, iteration)
+
             right_pad = cfg.REAL.PAD_WIDTH - 960
             top_pad = cfg.REAL.PAD_HEIGHT - 540
             img_L = F.pad(img_L, (0, right_pad, top_pad, 0, 0, 0, 0, 0), mode='constant', value=0)
             img_R = F.pad(img_R, (0, right_pad, top_pad, 0, 0, 0, 0, 0), mode='constant', value=0)
+            img_L, img_R = feaex(img_L), feaex(img_R)
+            
         else:  # If testing on sim, use GAN to generate img_L and img_R
             #img_L_real = data['img_L_real'].cuda()    # [bs, 1, H, W]
             #img_L_real = F.interpolate(img_L_real, (540, 960), mode='bilinear',
