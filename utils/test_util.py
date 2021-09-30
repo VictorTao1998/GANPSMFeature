@@ -87,11 +87,11 @@ def save_gan_img(img_outputs, path):
 
 
 
-def save_obj_err_file(total_obj_disp_err, total_obj_depth_err, log_dir):
-    result = np.append(total_obj_disp_err[None], total_obj_depth_err[None], axis=0).T
-    result = np.append(np.arange(cfg.SPLIT.OBJ_NUM)[:, None].astype(int), result, axis=-1)
+def save_obj_err_file(total_obj_disp_err, total_obj_depth_err, total_obj_depth_4_err, log_dir):
+    result = np.hstack((np.arange(cfg.SPLIT.OBJ_NUM)[:, None].astype(int), total_obj_disp_err[:, None],
+                        total_obj_depth_err[:, None], total_obj_depth_4_err[:, None]))
     result = result.astype('str').tolist()
-    head = [['     ', 'disp_err', 'depth_err']]
+    head = [['     ', 'disp_err', 'depth_err', 'depth_err_4']]
     result = head + result
 
     err_file = open(os.path.join(log_dir, 'obj_err.txt'), 'w')
