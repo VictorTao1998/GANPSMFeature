@@ -19,6 +19,7 @@ from utils.config import cfg
 from utils.util import get_time_string, setup_logger, depth_error_img, disp_error_img, save_images_grid, save_images
 from utils.test_util import load_from_dataparallel_model, save_img, save_gan_img, save_obj_err_file
 from utils.warp_ops import apply_disparity_cu
+import torchvision.transforms as transforms
 
 
 parser = argparse.ArgumentParser(description='Testing for CycleGAN + PSMNet')
@@ -66,6 +67,7 @@ def test(gan_model, psmnet_model, feaex, val_loader, logger, log_dir, summary_wr
     os.mkdir(os.path.join(log_dir, 'gt_depth'))
     os.mkdir(os.path.join(log_dir, 'pred_depth_abs_err_cmap'))
     os.mkdir(os.path.join(log_dir, 'gan'))
+    os.mkdir(args.output + "/feature")
 
     for iteration, data in enumerate(tqdm(val_loader)):
         img_L = data['img_L'].cuda()    # [bs, 1, H, W]
@@ -129,6 +131,13 @@ def test(gan_model, psmnet_model, feaex, val_loader, logger, log_dir, summary_wr
             img_R = F.pad(img_R_o, (0, right_pad, top_pad, 0, 0, 0, 0, 0), mode='constant', value=0)
 
             img_L, img_R = feaex(img_L), feaex(img_R)
+            #print(img_L.shape)
+            trans = transforms.ToPILImage()
+            img_out_L = trans(img_L[0]).convert('RGB')
+            img_out_R = trans(img_R[0]).convert('RGB')
+            
+            img_out_L.save(args.output + "/feature/" + f'{prefix}_L.png')
+            img_out_R.save(args.output + "/feature/" + f'{prefix}_R.png')
             
             input_sample = {'img_L': img_L, 'img_R': img_R, 'img_sim': img_R}
             gan_model.set_input(input_sample)
