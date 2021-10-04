@@ -135,7 +135,7 @@ def train(psmnet_model, psmnet_optimizer, TrainImgLoader, ValImgLoader):
 
         if (not is_distributed) or (dist.get_rank() == 0):
             # Get average results among all batches
-            total_err_metric_psmnet = avg_val_scalars_psmnet.mean()
+            total_err_metric_psmnet = avg_train_scalars_psmnet.mean()
             logger.info(f'Epoch {epoch_idx} val   psmnet    : {total_err_metric_psmnet}')
 
             # Save best checkpoints
