@@ -179,7 +179,7 @@ def train_sample(sample, psmnet_model, psmnet_optimizer, isTrain=True):
         del img_disp_r
 
     mask = (disp_gt < cfg.ARGS.MAX_DISP) * (disp_gt > 0)  # Note in training we do not exclude bg
-    #print(img_L.shape)
+    print(img_L.shape)
     if isTrain:
         pred_disp1, pred_disp2, pred_disp3 = psmnet_model(img_L, img_R)
         pred_disp = pred_disp3
