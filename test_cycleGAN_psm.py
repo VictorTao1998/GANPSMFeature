@@ -67,7 +67,7 @@ def test(gan_model, psmnet_model, feaex, val_loader, logger, log_dir, summary_wr
     os.mkdir(os.path.join(log_dir, 'gt_depth'))
     os.mkdir(os.path.join(log_dir, 'pred_depth_abs_err_cmap'))
     os.mkdir(os.path.join(log_dir, 'gan'))
-    os.mkdir(args.output + "/feature")
+    #os.mkdir(args.output + "/feature")
 
     for iteration, data in enumerate(tqdm(val_loader)):
         img_L = data['img_L'].cuda()    # [bs, 1, H, W]
@@ -132,12 +132,12 @@ def test(gan_model, psmnet_model, feaex, val_loader, logger, log_dir, summary_wr
 
             img_L, img_R = feaex(img_L), feaex(img_R)
             #print(img_L.shape)
-            trans = transforms.ToPILImage()
-            img_out_L = trans(img_L[0]).convert('RGB')
-            img_out_R = trans(img_R[0]).convert('RGB')
+            #trans = transforms.ToPILImage()
+            #img_out_L = trans(img_L[0]).convert('RGB')
+            #img_out_R = trans(img_R[0]).convert('RGB')
             
-            img_out_L.save(args.output + "/feature/" + f'{prefix}_L.png')
-            img_out_R.save(args.output + "/feature/" + f'{prefix}_R.png')
+            #img_out_L.save(args.output + "/feature/" + f'{prefix}_L.png')
+            #img_out_R.save(args.output + "/feature/" + f'{prefix}_R.png')
             
             input_sample = {'img_L': img_L, 'img_R': img_R, 'img_sim': img_R}
             gan_model.set_input(input_sample)
