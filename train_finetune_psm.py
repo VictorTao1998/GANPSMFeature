@@ -71,6 +71,8 @@ def train(psmnet_model, psmnet_optimizer, TrainImgLoader, ValImgLoader):
         print('epoch: ', epoch_idx)
         avg_train_scalars_psmnet = AverageMeterDict()
         for batch_idx, sample in enumerate(TrainImgLoader):
+            if batch_idx > 5:
+                break
             global_step = (len(TrainImgLoader) * epoch_idx + batch_idx) * cfg.SOLVER.BATCH_SIZE
 
             # Adjust learning rate
@@ -170,7 +172,7 @@ def train_sample(sample, psmnet_model, psmnet_optimizer, isTrain=True):
                              recompute_scale_factor=False, align_corners=False)
     img_R = F.interpolate(img_R, scale_factor=0.5, mode='bilinear',
                              recompute_scale_factor=False, align_corners=False)
-                             
+
     disp_gt = F.interpolate(disp_gt, scale_factor=0.5, mode='nearest',
                              recompute_scale_factor=False)  # [bs, 1, H, W]
     depth_gt = F.interpolate(depth_gt, scale_factor=0.5, mode='nearest',
