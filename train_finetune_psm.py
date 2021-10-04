@@ -166,6 +166,11 @@ def train_sample(sample, psmnet_model, psmnet_optimizer, isTrain=True):
     img_baseline = sample['baseline'].to(cuda_device)
     # Resize the 2x resolution disp and depth back to H * W
     # Note: This step should go before the apply_disparity_cu
+    img_L = F.interpolate(img_L, scale_factor=0.5, mode='bilinear',
+                             recompute_scale_factor=False, align_corners=False)
+    img_R = F.interpolate(img_R, scale_factor=0.5, mode='bilinear',
+                             recompute_scale_factor=False, align_corners=False)
+                             
     disp_gt = F.interpolate(disp_gt, scale_factor=0.5, mode='nearest',
                              recompute_scale_factor=False)  # [bs, 1, H, W]
     depth_gt = F.interpolate(depth_gt, scale_factor=0.5, mode='nearest',
