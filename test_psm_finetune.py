@@ -40,8 +40,7 @@ args = parser.parse_args()
 cfg.merge_from_file(args.config_file)
 cuda_device = torch.device("cuda:{}".format(args.local_rank))
 # If path to gan model is not specified, use gan model from cascade model
-if args.gan_model == '':
-    args.gan_model = args.model
+
 
 # python test_cycleGAN_psmnet.py --model /code/models/model_4.pth --onreal --exclude-bg --exclude-zeros
 # python test_cycleGAN_psmnet.py --config-file configs/remote_test.yaml --model ../train_8_14_cascade/train1/models/model_best.pth --onreal --exclude-bg --exclude-zeros --debug --gan-model
